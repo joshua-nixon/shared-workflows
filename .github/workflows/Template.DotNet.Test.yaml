@@ -6,41 +6,24 @@ on:
       working-directory:
         required: true
         type: string
-      test-projects:
-        required: true
+      test-project:
+        required: false
         type: string
 
 jobs:
-  setup-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix-projects: ${{ steps.set-matrix.outputs.projects }}
-    steps:
-      - id: set-matrix
-        run: |
-          JSON_ARRAY=$(echo "${{ inputs.test-projects }}" | jq -R -s -c 'split("\n") | map(select(length > 0)) | if length == 0 then [""] else . end')
-          echo "projects=$JSON_ARRAY" >> $GITHUB_OUTPUT
-
   test:
-    needs: setup-matrix
     runs-on: ubuntu-latest
-    if: ${{ matrix.project != '' }}
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.setup-matrix.outputs.matrix-projects) }}
-      fail-fast: false 
-
     steps:
       - uses: actions/checkout@v6
 
       - name: Restore dependencies
-        run: dotnet restore ${{ matrix.project }}
+        run: dotnet restore ${{ inputs.test-project }}
         working-directory: ${{ inputs.working-directory }}
 
       - name: Build project
-        run: dotnet build ${{ matrix.project }} --configuration Release --no-restore
+        run: dotnet build ${{ inputs.test-project }} --configuration Release --no-restore
         working-directory: ${{ inputs.working-directory }}
 
       - name: Run tests
-        run: dotnet test ${{ matrix.project }} --configuration Release --no-build
+        run: dotnet test ${{ inputs.test-project }} --configuration Release --no-build
         working-directory: ${{ inputs.working-directory }}

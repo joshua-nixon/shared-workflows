@@ -1,4 +1,4 @@
-name: Template.Test
+name: Template.DotNet.Test
 
 on:
   workflow_call:

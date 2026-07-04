@@ -5,6 +5,8 @@ on:
     outputs:
       image_tag:
         value: ${{ jobs.build.outputs.image_tag }}
+      image:
+        value: ${{ jobs.build.outputs.image }}
 
     inputs:
       image_repository:
@@ -48,6 +50,7 @@ jobs:
 
     outputs:
       image_tag: ${{ steps.create_tag.outputs.image_tag }}
+      image: ${{ steps.create_tag.outputs.image }}
 
     steps:
       - uses: actions/checkout@v6
@@ -62,7 +65,9 @@ jobs:
           DATE_PART="$(date +%Y%m%d)"
           TIME_PART="$(date +%H%M%S)"
           IMAGE_TAG="${SAFE_BRANCH_NAME}-${DATE_PART}-${TIME_PART}-${SHORT_SHA}"
+          IMAGE="${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG}"
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
 
       - name: Login to Azure with OIDC
         uses: azure/login@v3
@@ -84,4 +89,4 @@ jobs:
           cache-to: type=gha,mode=max
           context: ${{ env.BUILD_CONTEXT }}
           file: ${{ env.DOCKERFILE_PATH }}
-          tags: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}:${{ steps.create_tag.outputs.image_tag }}
+          tags: ${{ steps.create_tag.outputs.image }}

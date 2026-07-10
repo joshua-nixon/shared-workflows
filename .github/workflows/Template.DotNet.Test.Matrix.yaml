@@ -1,0 +1,49 @@
+name: Template.DotNet.Test.Matrix
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: true
+        type: string
+      test_projects:
+        required: true
+        type: string
+
+jobs:
+  prepare-test:
+    runs-on: ubuntu-latest
+    outputs:
+      test_projects_json: ${{ steps.normalize.outputs.test_projects_json }}
+    steps:
+      - name: Normalize test project list
+        id: normalize
+        shell: bash
+        run: |
+          projects="${{ inputs.test_projects }}"
+
+          normalized="$(printf '%s\n' "$projects" \
+            | tr ',' '\n' \
+            | sed 's/\r$//' \
+            | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+            | sed 's#^/##' \
+            | sed '/^$/d')"
+
+          if [[ -z "$normalized" ]]; then
+            echo "No test projects were provided after normalization." >&2
+            exit 1
+          fi
+
+          test_projects_json="$(printf '%s\n' "$normalized" | jq -R . | jq -s -c .)"
+          echo "test_projects_json=$test_projects_json" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs:
+      - prepare-test
+    strategy:
+      matrix:
+        test_project: ${{ fromJson(needs.prepare-test.outputs.test_projects_json) }}
+    uses: ./.github/workflows/Template.DotNet.Test.yaml
+    with:
+      working-directory: ${{ inputs.working_directory }}
+      test-project: ${{ matrix.test_project }}

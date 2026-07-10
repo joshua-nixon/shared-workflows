@@ -14,7 +14,7 @@ jobs:
   prepare-test:
     runs-on: ubuntu-latest
     outputs:
-      test-projects_json: ${{ steps.normalize.outputs.test-projects_json }}
+      test_projects_json: ${{ steps.normalize.outputs.test_projects_json }}
     steps:
       - name: Normalize test project list
         id: normalize
@@ -34,15 +34,15 @@ jobs:
             exit 1
           fi
 
-          test-projects_json="$(printf '%s\n' "$normalized" | jq -R . | jq -s -c .)"
-          echo "test-projects_json=$test-projects_json" >> "$GITHUB_OUTPUT"
+          test_projects_json="$(printf '%s\n' "$normalized" | jq -R . | jq -s -c .)"
+          echo "test_projects_json=$test_projects_json" >> "$GITHUB_OUTPUT"
 
   test:
     needs:
       - prepare-test
     strategy:
       matrix:
-        test_project: ${{ fromJson(needs.prepare-test.outputs.test-projects_json) }}
+        test_project: ${{ fromJson(needs.prepare-test.outputs.test_projects_json) }}
     uses: ./.github/workflows/Template.DotNet.Test.yaml
     with:
       working-directory: ${{ inputs.working-directory }}

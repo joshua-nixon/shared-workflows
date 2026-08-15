@@ -40,7 +40,7 @@ jobs:
 
       - id: login
         name: Login to Azure
-        uses: ./.github/actions/azure-acr-login
+        uses: /home/runner/work/untitledproject/untitledproject/.github/actions/azure-acr-login
         background: true
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}

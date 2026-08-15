@@ -3,9 +3,13 @@ name: Template.Deployables.Run
 on:
   workflow_call:
     inputs:
+      environment:
+        type: string
+        required: true
+
       deployables-json:
         type: string
-        default: true
+        required: true
 
 permissions:
   id-token: write
@@ -53,5 +57,5 @@ jobs:
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
-      environment: ${{ inputs.environment || 'DevTest' }}
+      environment: ${{ inputs.environment }}
     secrets: inherit

@@ -49,7 +49,7 @@ jobs:
           file: ${{ matrix.buildable.dockerfilePath }}
           tags: ${{ matrix.buildable.proposedImage }}
 
-      - name: Wait for Azure Login
+      - name: Login to Azure
         wait: login
 
       - name: Push ${{ matrix.buildable.name }}

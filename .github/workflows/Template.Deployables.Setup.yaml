@@ -35,14 +35,14 @@ jobs:
           sparse-checkout: |
             .github
 
-      - name: Checkout shared workflow scripts
+      - name: Checkout required resources
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
-          ref: v1.3
+          ref: v1.4
           path: _shared
           sparse-checkout: |
-            .github/scripts
+            .github/scripts/CreateDeployableMeta.ps1
 
       - name: Get files changed
         id: changed
@@ -73,7 +73,7 @@ jobs:
             -ContainerRegistry  $env:AZURE_REGISTRY `
             -GitHubEventName    $env:GITHUB_EVENT_NAME
 
-          $metadata           = @( $metadataJson | ConvertFrom-Json )
+          $metadata = @( $metadataJson | ConvertFrom-Json )
 
           $buildableMetadata  = @( $metadata | Where-Object { $_.build } )
           $buildableJson      = ConvertTo-Json -InputObject ([object[]]$buildableMetadata) -Compress

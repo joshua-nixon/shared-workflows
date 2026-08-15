@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   test:
-    name: Test ${{ matrix.test-project.name }}
+    name: Test ${{ matrix.project.name }}
     if: ${{ inputs.has-matrix-json == 'true' }}
     runs-on: ubuntu-latest
     strategy:
@@ -25,6 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Test ${{ matrix.project.path }}
+      - name: Test ${{ matrix.project.name }}
         shell: bash
         run: dotnet test '${{ matrix.project.path }}'

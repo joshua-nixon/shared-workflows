@@ -48,6 +48,7 @@ jobs:
       - test
       - build
       - scan
+    if: ${{ !cancelled() && !failure() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     uses: ./.github/workflows/Template.Deployables.Dispatch.yaml
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}

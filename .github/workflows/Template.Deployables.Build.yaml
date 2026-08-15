@@ -22,20 +22,21 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.buildable.name }}
+    name: Build ${{ matrix.project.name }}
     if: ${{ inputs.has-matrix-json == true }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        buildable: ${{ fromJSON(inputs.matrix-json) }}
+        project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
 
-      - name: Checkout shared workflows
+      - name: Checkout required actions
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
           ref: feature/speed-improvements
-          path: _shared
+          sparse-checkout: |
+            .github/actions/azure-acr-login
 
       - name: Verify shared action is available
         shell: pwsh
@@ -60,19 +61,19 @@ jobs:
             sparse-checkout: ${{ inputs.sparse-checkout }}
         - uses: docker/setup-buildx-action@v4
 
-      - name: Build ${{ matrix.buildable.name }}
+      - name: Build ${{ matrix.project.name }}
         uses: docker/build-push-action@v7
         with:
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          context: ${{ matrix.buildable.context }}
-          file: ${{ matrix.buildable.dockerfilePath }}
-          tags: ${{ matrix.buildable.proposedImage }}
+          context: ${{ matrix.project.context }}
+          file: ${{ matrix.project.dockerfilePath }}
+          tags: ${{ matrix.project.proposedImage }}
 
       - name: Login to Azure
         wait: login
 
-      - name: Push ${{ matrix.buildable.name }}
+      - name: Push ${{ matrix.project.name }}
         shell: bash
-        run: docker push '${{ matrix.buildable.proposedImage }}'
+        run: docker push '${{ matrix.project.proposedImage }}'

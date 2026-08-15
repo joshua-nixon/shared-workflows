@@ -53,8 +53,4 @@ jobs:
         wait: login
 
       - name: Push ${{ matrix.buildable.name }}
-        uses: docker/build-push-action@v7
-        with:
-          push: true
-          provenance: false
-          tags: ${{ matrix.buildable.proposedImage }}
+        run: docker push ${{ matrix.buildable.proposedImage }}}

@@ -41,7 +41,6 @@ jobs:
       - name: Build ${{ matrix.buildable.name }}
         uses: docker/build-push-action@v7
         with:
-          push: false
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -53,4 +52,4 @@ jobs:
         wait: login
 
       - name: Push ${{ matrix.buildable.name }}
-        run: docker push ${{ matrix.buildable.proposedImage }}}
+        run: docker push ${{ matrix.buildable.proposedImage }}

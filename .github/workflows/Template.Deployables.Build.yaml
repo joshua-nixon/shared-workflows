@@ -45,16 +45,12 @@ jobs:
             subscription-id: ${{ vars.AZURE_SUB_ID }}
             registry: ${{ vars.AZURE_REGISTRY }}
 
-      - name: Build ${{ matrix.project.name }}
+      - name: Build and push ${{ matrix.project.name }}
         uses: docker/build-push-action@v7
         with:
-          load: true
+          push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           context: ${{ matrix.project.context }}
           file: ${{ matrix.project.dockerfilePath }}
           tags: ${{ matrix.project.proposedImage }}
-
-      - name: Push ${{ matrix.project.name }}
-        shell: bash
-        run: docker push '${{ matrix.project.proposedImage }}'

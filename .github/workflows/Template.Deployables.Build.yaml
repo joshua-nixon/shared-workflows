@@ -30,9 +30,18 @@ jobs:
         buildable: ${{ fromJSON(inputs.matrix-json) }}
     steps:
 
+      - name: Checkout shared workflows
+        uses: actions/checkout@v7
+        with:
+          repository: nixonjoshua98/shared-workflows
+          ref: feature/speed-improvements
+          path: _shared
+          sparse-checkout: |
+            .github
+
       - id: login
         name: Login to Azure
-        uses: ./.github/actions/azure-acr-login
+        uses: ./_shared/.github/actions/azure-acr-login
         background: true
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}

@@ -11,6 +11,10 @@ on:
         type: string
         required: true
 
+      sparse-checkout:
+        type: string
+        default: ''
+
 permissions:
   id-token: write
   contents: read
@@ -26,6 +30,7 @@ jobs:
       - setup
     uses: ./.github/workflows/Template.Deployables.Tests.yaml
     with:
+      sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.test-projects-json }}
       has-matrix-json: ${{ needs.setup.outputs.has-test-projects-json == 'true' }}
 
@@ -34,6 +39,7 @@ jobs:
       - setup
     uses: ./.github/workflows/Template.Deployables.Build.yaml
     with:
+      sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
 

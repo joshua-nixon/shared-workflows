@@ -37,6 +37,8 @@ jobs:
 
       - parallel:
         - uses: actions/checkout@v7
+          with:
+            sparse-checkout: ${{ inputs.sparse-checkout }}
         - uses: docker/setup-buildx-action@v4
 
       - name: Build ${{ matrix.buildable.name }}

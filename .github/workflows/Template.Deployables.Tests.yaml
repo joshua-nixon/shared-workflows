@@ -7,9 +7,14 @@ on:
         description: '[{ name, path }]'
         required: true
         type: string
+
       has-matrix-json:
         required: true
         type: string
+
+      sparse-checkout:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -24,6 +29,8 @@ jobs:
         project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout: ${{ inputs.sparse-checkout }}
 
       - name: Test ${{ matrix.project.name }}
         shell: bash

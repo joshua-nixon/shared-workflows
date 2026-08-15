@@ -3,9 +3,9 @@ name: Template.Deployables.Run
 on:
   workflow_call:
     inputs:
-      environment:
+      environments-json:
         type: string
-        required: true
+        default: '[]'
 
       deployables-json:
         type: string
@@ -62,6 +62,5 @@ jobs:
     uses: ./.github/workflows/Template.Deployables.Dispatch.yaml
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
-      environment: ${{ inputs.environment }}
+      environments-json: ${{ inputs.environments-json }}
     secrets: inherit

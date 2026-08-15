@@ -7,12 +7,11 @@ on:
         description: '[{ name, proposedImage }]'
         required: true
         type: string
-      has-matrix-json:
-        required: true
-        type: boolean
-      environment:
-        required: true
+
+      environments-json:
+        description: '[{ name, deploy }]'
         type: string
+        default: '[]'
 
     secrets:
       GITOPS_REPO_PAT:
@@ -23,12 +22,14 @@ permissions:
 
 jobs:
   dispatch:
-    name: Dispatch ${{ matrix.deployable.name }}
-    if: ${{ inputs.has-matrix-json == true }}
+    name: Dispatch ${{ matrix.deployable.name }} ( ${{ matrix.environment.name }} )
+    if: ${{ matrix.environment.deploy == true }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         deployable: ${{ fromJSON(inputs.matrix-json) }}
+        environment: ${{ fromJSON(inputs.environments-json) }}
     steps:
       - name: Dispatch image change
         uses: peter-evans/repository-dispatch@v4
@@ -37,4 +38,7 @@ jobs:
           repository: nixonjoshua98/nixon-gitops
           event-type: ${{ matrix.deployable.eventName }}
           client-payload: >-
-            { "image": "${{ matrix.deployable.proposedImage }}","environment": "${{ inputs.environment }}" }
+            {
+              "image": "${{ matrix.deployable.proposedImage }}",
+              "environment": "${{ matrix.environment.name }}"
+            }

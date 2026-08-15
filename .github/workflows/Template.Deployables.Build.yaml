@@ -26,8 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - shell: pwsh
+        env:
+          VALUE: ${{ vars.AZURE_CLIENT_ID }}
+        run: Write-Host "$env:VALUE"
+
       - id: login
-        name: Login to Azure Container Registry
+        name: Azure Container Registry Login
         uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@feature/speed-improvements
         background: true
         with:
@@ -48,7 +53,7 @@ jobs:
           file: ${{ matrix.buildable.dockerfilePath }}
           tags: ${{ matrix.buildable.proposedImage }}
 
-      - name: Wait for Azure Container Registry Login
+      - name: Azure Container Registry Login
         wait: login
 
       - name: Push ${{ matrix.buildable.name }}

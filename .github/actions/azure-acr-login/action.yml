@@ -1,7 +1,5 @@
 name: Azure ACR Login
 
-description: Authenticate to Azure with OIDC and log in to Azure Container Registry
-
 inputs:
   client-id:
     description: Azure service principal client ID

@@ -7,9 +7,14 @@ on:
         description: '[{ build, name, context, dockerfilePath, proposedImage }]'
         required: true
         type: string
+
       has-matrix-json:
         required: true
         type: boolean
+
+      sparse-checkout:
+        type: string
+        default: ''
 
 permissions:
   id-token: write

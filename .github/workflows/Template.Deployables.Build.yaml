@@ -37,6 +37,13 @@ jobs:
           ref: feature/speed-improvements
           path: _shared
 
+      - name: Verify shared action is available
+        shell: pwsh
+        run: |
+          Write-Host "Checking shared action path..."
+          Test-Path "_shared/.github/actions/azure-acr-login/action.yml" | Write-Host
+          Get-ChildItem "_shared/.github/actions/azure-acr-login" | Format-Table -AutoSize
+
       - id: login
         name: Login to Azure
         uses: ./_shared/.github/actions/azure-acr-login

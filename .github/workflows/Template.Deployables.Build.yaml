@@ -26,11 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - shell: pwsh
-        env:
-          VALUE: ${{ vars.AZURE_CLIENT_ID }}
-        run: Write-Host "$env:VALUE"
-
       - id: login
         name: Azure Container Registry Login
         uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@feature/speed-improvements
@@ -47,6 +42,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: false
+          load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           context: ${{ matrix.buildable.context }}
@@ -60,4 +56,5 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
+          provenance: false
           tags: ${{ matrix.buildable.proposedImage }}

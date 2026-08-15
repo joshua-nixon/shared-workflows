@@ -28,7 +28,7 @@ jobs:
 
       - id: login
         name: Login to Azure Container Registry
-        uses: ./.github/actions/azure-acr-login
+        uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@feature/speed-improvements
         background: true
 
       - uses: docker/setup-buildx-action@v4

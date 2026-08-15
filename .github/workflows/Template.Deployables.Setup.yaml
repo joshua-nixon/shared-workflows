@@ -29,11 +29,17 @@ jobs:
       buildable-json: ${{ steps.metadata.outputs.buildable-json }}
       has-buildable-json: ${{ steps.metadata.outputs.has-buildable-json }}
     steps:
-      - name: Checkout workflow scripts
+      - name: Checkout .github
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            .github
+
+      - name: Checkout shared workflow scripts
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
-          ref: v1.1
+          ref: v1.2
           path: _shared
           sparse-checkout: |
             .github/scripts

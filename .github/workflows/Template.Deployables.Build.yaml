@@ -32,7 +32,7 @@ jobs:
 
       - id: login
         name: Login to Azure
-        uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@feature/speed-improvements
+        uses: ./.github/actions/azure-acr-login
         background: true
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}

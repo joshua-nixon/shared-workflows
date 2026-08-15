@@ -36,8 +36,6 @@ jobs:
           repository: nixonjoshua98/shared-workflows
           ref: feature/speed-improvements
           path: _shared
-          sparse-checkout: |
-            .github
 
       - id: login
         name: Login to Azure

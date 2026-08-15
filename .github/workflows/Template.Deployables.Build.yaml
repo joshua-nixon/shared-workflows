@@ -24,7 +24,9 @@ jobs:
       matrix:
         buildable: ${{ fromJSON(inputs.matrix-json) }}
     steps:
-      - uses: actions/checkout@v7
+      - parallel:
+        - uses: actions/checkout@v7
+        - uses: docker/setup-buildx-action@v4
 
       - id: login
         name: Azure Container Registry Login
@@ -35,8 +37,6 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUB_ID }}
           registry: ${{ vars.AZURE_REGISTRY }}
-
-      - uses: docker/setup-buildx-action@v4
 
       - name: Build ${{ matrix.buildable.name }}
         uses: docker/build-push-action@v7

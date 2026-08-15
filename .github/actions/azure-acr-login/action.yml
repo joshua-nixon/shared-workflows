@@ -1,0 +1,31 @@
+name: Azure ACR Login
+
+inputs:
+  client-id:
+    description: Azure service principal client ID
+    required: true
+  tenant-id:
+    description: Azure tenant ID
+    required: true
+  subscription-id:
+    description: Azure subscription ID
+    required: true
+  registry:
+    description: Azure Container Registry hostname
+    required: true
+    
+runs:
+  using: composite
+  steps:
+    - name: Login to Azure with OIDC
+      uses: azure/login@v3
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+
+    - name: Login to Azure Container Registry
+      shell: bash
+      env:
+        IMAGE_REGISTRY: ${{ inputs.registry }}
+      run: az acr login --name "${IMAGE_REGISTRY%%.*}"

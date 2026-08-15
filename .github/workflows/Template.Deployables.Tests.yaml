@@ -7,25 +7,31 @@ on:
         description: '[{ name, path }]'
         required: true
         type: string
+
       has-matrix-json:
         required: true
         type: string
+
+      sparse-checkout:
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   test:
-    name: ${{ matrix.test-project.name }}
+    name: Test ${{ matrix.project.name }}
     if: ${{ inputs.has-matrix-json == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        test-project: ${{ fromJSON(inputs.matrix-json) }}
+        project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
-      - name: Sparse checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: ${{ inputs.sparse-checkout }}
 
-      - name: Run test project
+      - name: Test ${{ matrix.project.name }}
         shell: bash
-        run: dotnet test '${{ matrix.test-project.path }}'
+        run: dotnet test '${{ matrix.project.path }}'

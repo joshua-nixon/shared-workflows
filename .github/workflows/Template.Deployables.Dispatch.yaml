@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   dispatch:
-    name: ${{ matrix.deployable.name }}
+    name: Dispatch ${{ matrix.deployable.name }}
     if: ${{ inputs.has-matrix-json == true }}
     runs-on: ubuntu-latest
     strategy:

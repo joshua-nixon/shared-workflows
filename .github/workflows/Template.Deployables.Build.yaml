@@ -30,17 +30,9 @@ jobs:
         project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
 
-      - name: Checkout required actions
-        uses: actions/checkout@v7
-        with:
-          repository: nixonjoshua98/shared-workflows
-          ref: feature/speed-improvements
-          sparse-checkout: |
-            .github/actions/azure-acr-login
-
       - id: login
         name: Login to Azure
-        uses: /home/runner/work/untitledproject/untitledproject/.github/actions/azure-acr-login
+        uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@feature/speed-improvements
         background: true
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}

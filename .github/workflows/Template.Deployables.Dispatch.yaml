@@ -24,7 +24,6 @@ jobs:
   dispatch:
     name: Dispatch ${{ matrix.deployable.name }} ( ${{ matrix.environment.name }} )
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       matrix:
         deployable: ${{ fromJSON(inputs.matrix-json) }}

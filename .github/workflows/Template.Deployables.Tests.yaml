@@ -21,11 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        test-project: ${{ fromJSON(inputs.matrix-json) }}
+        project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
-      - name: Sparse checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-      - name: Run test project
+      - name: Test ${{ matrix.project.path }}
         shell: bash
-        run: dotnet test '${{ matrix.test-project.path }}'
+        run: dotnet test '${{ matrix.project.path }}'

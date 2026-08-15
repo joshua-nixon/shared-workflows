@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   test:
-    name: ${{ matrix.test-project.name }}
+    name: Test ${{ matrix.test-project.name }}
     if: ${{ inputs.has-matrix-json == 'true' }}
     runs-on: ubuntu-latest
     strategy:

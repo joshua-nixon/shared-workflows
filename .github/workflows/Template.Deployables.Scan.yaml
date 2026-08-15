@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   scan:
-    name: ${{ matrix.deployable.name }}
+    name: Scan ${{ matrix.deployable.name }}
     if: ${{ inputs.has-matrix-json == true }}
     runs-on: ubuntu-latest
     strategy:

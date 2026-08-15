@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
-          ref: v1.0
+          ref: v1.1
           path: _shared
           sparse-checkout: |
             .github/scripts

@@ -1,0 +1,56 @@
+name: Template.Deployables.Run
+
+on:
+  workflow_call:
+    inputs:
+      deployables-json:
+        type: string
+        default: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  setup:
+    uses: ./.github/workflows/Template.Deployables.Setup.yaml
+    with:
+      deployables-json: ${{ inputs.deployables-json }}
+
+  test:
+    needs: 
+      - setup
+    uses: ./.github/workflows/Template.Deployables.Tests.yaml
+    with:
+      matrix-json: ${{ needs.setup.outputs.test-projects-json }}
+      has-matrix-json: ${{ needs.setup.outputs.has-test-projects-json == 'true' }}
+
+  build:
+    needs:
+      - setup
+    uses: ./.github/workflows/Template.Deployables.Build.yaml
+    with:
+      matrix-json: ${{ needs.setup.outputs.buildable-json }}
+      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
+
+  scan:
+    needs:
+      - setup
+      - build
+    uses: ./.github/workflows/Template.Deployables.Scan.yaml
+    with:
+      matrix-json: ${{ needs.setup.outputs.buildable-json }}
+      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
+
+  dispatch:
+    needs:
+      - setup
+      - test
+      - build
+      - scan
+    uses: ./.github/workflows/Template.Deployables.Dispatch.yaml
+    with:
+      matrix-json: ${{ needs.setup.outputs.buildable-json }}
+      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
+      environment: ${{ inputs.environment || 'DevTest' }}
+    secrets: inherit

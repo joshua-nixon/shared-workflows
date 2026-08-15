@@ -1,0 +1,31 @@
+name: Template.Deployables.Tests
+
+on:
+  workflow_call:
+    inputs:
+      matrix-json:
+        description: '[{ name, path }]'
+        required: true
+        type: string
+      has-matrix-json:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.test-project.name }}
+    if: ${{ inputs.has-matrix-json == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-project: ${{ fromJSON(inputs.matrix-json) }}
+    steps:
+      - name: Sparse checkout
+        uses: actions/checkout@v7
+
+      - name: Run test project
+        shell: bash
+        run: dotnet test '${{ matrix.test-project.path }}'

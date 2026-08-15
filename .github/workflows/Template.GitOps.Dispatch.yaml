@@ -1,4 +1,4 @@
-name: Template.Deploy
+name: Template.GitOps.Dispatch
 
 on:
   workflow_call:

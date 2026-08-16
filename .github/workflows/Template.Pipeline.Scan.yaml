@@ -40,6 +40,12 @@ jobs:
       matrix:
         project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
+      - name: Download Image Artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.project.imageName }}
+          path: /tmp
+
       - name: Azure Container Registry Login
         uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.6
         with:
@@ -51,33 +57,30 @@ jobs:
       - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ matrix.project.imageName }}
+          input: /tmp/${{ matrix.project.imageName }}.tar
           scanners: vuln
-          format: json
+          format: table
           output: trivy-results.json
           exit-code: '1'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
 
-      - name: Convert Trivy Results
-        if: always()
-        run: |
-          if [ -s trivy-results.json ]; then
-            trivy convert trivy-results.json --format sarif    --output trivy-results.sarif
-            trivy convert trivy-results.json --format table    --output trivy-table.sarif
-          fi
-
-      - name: Upload Trivy SARIF Results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          sarif_file: 'trivy-results.sarif'
+          image-ref: ${{ matrix.project.imageName }}
+          scanners: vuln
+          format: table
+          output: trivy-results.json
+          exit-code: '1'
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
 
       - name: Publish Trivy Results
         if: always()
         run: |
           if [ -s trivy-summary.md ]; then
             echo "## Trivy Scan summary" >> $GITHUB_STEP_SUMMARY
-            cat trivy-table.md >> $GITHUB_STEP_SUMMARY
+            cat trivy-results.md >> $GITHUB_STEP_SUMMARY
             echo "<hr>" >> $GITHUB_STEP_SUMMARY
           fi

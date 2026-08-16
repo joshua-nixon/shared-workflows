@@ -69,3 +69,20 @@ jobs:
           context: ${{ matrix.project.context }}
           file: ${{ matrix.project.dockerfilePath }}
           tags: ${{ matrix.project.imageName }}
+
+      - name: Build ${{ matrix.project.name }}
+        uses: docker/build-push-action@v7
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          context: ${{ matrix.project.context }}
+          file: ${{ matrix.project.dockerfilePath }}
+          tags: ${{ matrix.project.imageName }}
+          outputs: type=tar,dest=/tmp/${{ matrix.project.imageName }}.tar
+
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.project.imageName }}
+          path: /tmp/${{ matrix.project.imageName }}.tar
+          retention-days: 1

@@ -100,8 +100,8 @@ jobs:
 
           $buildableMetadata  = @( $metadata | Where-Object { $_.build } )
           $buildableJson      = ConvertTo-Json -InputObject ([object[]]$buildableMetadata) -Compress
-          $hasBuildable       = ($buildableMetadata.Count -gt 0).ToString().ToLower()
-          $hasAnyDeployable   = (($buildableMetadata.Count -gt 0) -and ($environments.Count -gt 0)).ToString().ToLower()
+          $hasBuildable       = ($buildableMetadata.Count -gt 0).
+          $hasAnyDeployable   = (($buildableMetadata.Count -gt 0) -and ($environments.Count -gt 0))
 
           Write-Env "buildable-json"      $buildableJson
           Write-Env "has-buildable-json"  $hasBuildable
@@ -110,7 +110,7 @@ jobs:
           $testMetadata       = @( $metadata | Where-Object { $_.runTests } )
           $testProjectMatrix  = @( $testMetadata | ForEach-Object { $_.testProjects } | Sort-Object -Property path -Unique )
           $testProjectsJson   = ConvertTo-Json -InputObject ([object[]]$testProjectMatrix) -Compress
-          $hasTestProjects    = ($testProjectMatrix.Count -gt 0).ToString().ToLower()
+          $hasTestProjects    = ($testProjectMatrix.Count -gt 0)
 
           Write-Env "test-projects-json"      $testProjectsJson
           Write-Env "has-test-projects-json"  $hasTestProjects

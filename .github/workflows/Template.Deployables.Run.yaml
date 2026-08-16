@@ -3,11 +3,11 @@ name: Template.Deployables.Run
 on:
   workflow_call:
     inputs:
-      environments-json:
+      environment-json:
         type: string
         default: '[]'
 
-      deployables-json:
+      buildable-json:
         type: string
         required: true
 
@@ -47,8 +47,8 @@ jobs:
   setup:
     uses: ./.github/workflows/Template.Deployables.Setup.yaml
     with:
-      deployables-json: ${{ inputs.deployables-json }}
-      environments-json: ${{ inputs.environments-json }}
+      buildable-json: ${{ inputs.buildable-json }}
+      environment-json: ${{ inputs.environment-json }}
       azure-registry: ${{ inputs.azure-registry }}
 
   test:
@@ -102,6 +102,6 @@ jobs:
     with:
       gitops-repository: ${{ inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      environments-json: ${{ needs.setup.outputs.environments-json }}
+      environment-json: ${{ needs.setup.outputs.environment-json }}
     secrets:
       GITOPS_REPO_TOKEN: ${{ secrets.GITOPS_REPO_TOKEN }}

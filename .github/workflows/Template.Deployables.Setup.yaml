@@ -3,12 +3,12 @@ name: Template.Deployables.Setup
 on:
   workflow_call:
     inputs:
-      deployables-json:
+      buildable-json:
         description: '[{ name, build }]'
         required: true
         type: string
 
-      environments-json:
+      environment-json:
         description: '[{ name, deploy }]'
         required: true
         type: string
@@ -22,8 +22,8 @@ on:
       test-projects-json:
         value: ${{ jobs.setup.outputs.test-projects-json }}
 
-      environments-json:
-        value: ${{ jobs.setup.outputs.environments-json }}
+      environment-json:
+        value: ${{ jobs.setup.outputs.environment-json }}
 
       buildable-json:
         value: ${{ jobs.setup.outputs.buildable-json }}
@@ -46,7 +46,7 @@ jobs:
     outputs:
       test-projects-json: ${{ steps.metadata.outputs.test-projects-json }}
       has-any-testable: ${{ steps.metadata.outputs.has-any-testable }}
-      environments-json: ${{ steps.metadata.outputs.environments-json }}
+      environment-json: ${{ steps.metadata.outputs.environment-json }}
       buildable-json: ${{ steps.metadata.outputs.buildable-json }}
       has-any-buildable: ${{ steps.metadata.outputs.has-any-buildable }}
       has-any-deployable: ${{ steps.metadata.outputs.has-any-deployable }}
@@ -79,8 +79,8 @@ jobs:
           GITHUB_SHA_VALUE: ${{ github.sha }}
           AZURE_REGISTRY: ${{ inputs.azure-registry }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
-          DEPLOYABLES_JSON: ${{ inputs.deployables-json }}
-          ENVIRONMENTS_JSON: ${{ inputs.environments-json }}
+          BUILDABLE_JSON: ${{ inputs.buildable-json }}
+          ENVIRONMENTS_JSON: ${{ inputs.environment-json }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           CHANGED_FILES_JSON: ${{ steps.changed.outputs.all_changed_files }}
         run: |
@@ -89,7 +89,7 @@ jobs:
           }
 
           $metadataJson = & _shared/.github/scripts/CreateDeployableMeta.ps1 `
-            -DeployablesJson    $env:DEPLOYABLES_JSON `
+            -BuildableJson      $env:BUILDABLE_JSON `
             -ChangedFilesJson   $env:CHANGED_FILES_JSON `
             -GitHubSHA          $env:GITHUB_SHA_VALUE `
             -GitHubRefName      $env:GITHUB_REF_NAME `
@@ -104,7 +104,7 @@ jobs:
           $testProjectsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.testProjects)) -Compress
 
           Write-Env "buildable-json"      $buildableJson
-          Write-Env "environments-json"   $environmentsJson
+          Write-Env "environment-json"   $environmentsJson
           Write-Env "test-projects-json"  $testProjectsJson
 
           Write-Env "has-any-buildable"  $metadata.hasAnyBuildable.ToString().ToLower()

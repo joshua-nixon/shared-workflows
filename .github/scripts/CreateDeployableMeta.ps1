@@ -1,7 +1,13 @@
 param(
-  [Parameter(Mandatory)]
-  [string]$DeployablesJson,
 
+  # {
+  #   "name": "String",
+  #   "build": "Boolean"
+  # }
+  [Parameter(Mandatory)]
+  [string]$BuildableJson,
+
+  # [ "String" ]
   [Parameter(Mandatory)]
   [string]$ChangedFilesJson,
 
@@ -17,6 +23,10 @@ param(
   [Parameter(Mandatory)]
   [string]$GitHubEventName,
 
+  # {
+  #   "name": "String",
+  #   "deploy": "Boolean"
+  # }
   [Parameter(Mandatory)]
   [string]$EnvironmentsJson
 )
@@ -29,6 +39,9 @@ function Write-KeyValue {
 
 function Get-TestProjects {
   param([psobject]$Project)
+
+  # Convert the configured test project paths into the compact shape consumed by
+  # the workflow's test job. Projects without testProjects are not testable.
 
   if ($Project.PSObject.Properties.Name -contains 'testProjects') {
       return $Project.testProjects | ForEach-Object {
@@ -45,7 +58,7 @@ function Get-TestProjects {
 function Create-ProposedImage {
   param([psobject]$Project)
 
-  # Random suffix, so tags of different images are not identical
+  # Include a random suffix so independently created images do not share a tag.
   $randomSuffix = '{0:D5}' -f (Get-Random -Minimum 0 -Maximum 5000)
 
   return ("{0}/{1}:{2}-{3}-{4}-{5}" -f $ContainerRegistry, $Project.name, $branchName, $timestamp, $shortSha, $randomSuffix)
@@ -54,6 +67,13 @@ function Create-ProposedImage {
 function Get-DockerfilePath {
     param([psobject]$Project)
 
+    # Get the dockerfile path for the project, loads from the project metadata
+    # or generates it based off the project path (the default)
+
+    if ($Project.PSObject.Properties.Name -contains 'dockerfilePath') {
+      return $Project.dockerfilePath
+    }
+
     $projectDirectory = Split-Path -Path $Project.path -Parent
 
     return Join-Path -Path $projectDirectory -ChildPath "Dockerfile"
@@ -61,6 +81,9 @@ function Get-DockerfilePath {
 
 function Test-ProjectChanged {
     param([psobject]$Paths, [string[]]$ChangedFiles)
+
+    # A project is considered changed when any configured related path matches
+    # one of the files reported by the change-detection step.
 
     foreach ($relatedPath in $Paths) {
         if ($ChangedFiles | Where-Object { $_ -like $relatedPath }) {
@@ -75,7 +98,10 @@ function Get-ProjectRelatedPaths {
   param([psobject]$Project)
 
   $projectDirectory = Split-Path -Path $Project.path -Parent
-  $relatedPaths     = @(
+
+  # Changes anywhere in the project directory are relevant by default; the
+  # metadata file can add paths shared by multiple projects.
+  $relatedPaths = @(
     "$projectDirectory/*"
   )
 
@@ -87,6 +113,8 @@ function Get-ProjectRelatedPaths {
 }
 
 function Get-DeployableEnvironments {
+  # Keep only environments enabled for deployment and expose their names to
+  # later workflow steps.
   return ,@( 
     $EnvironmentsJson `
       | ConvertFrom-Json `
@@ -96,6 +124,8 @@ function Get-DeployableEnvironments {
 }
 
 function Get-ProjectMetadata {
+  # Build one normalized record per selected project so build and test stages
+  # can apply their own filters without re-reading the source metadata.
   $result = @()
 
   foreach ($project in $projects) {
@@ -130,6 +160,8 @@ function Get-ProjectMetadata {
 }
 
 function Get-BuildableProjectsMetadata {
+  # Reduce project metadata to only the required fields
+  # We only need fields relating to building, scanning, and deploying
   return ,@( 
       $projectMetadata `
         | Where-Object { $_.build } `
@@ -146,6 +178,8 @@ function Get-BuildableProjectsMetadata {
 }
 
 function Get-TestableProjectsMetadata {
+  # Flatten test projects from all projects, then remove duplicate paths so a
+  # shared test project runs only once.
   return ,@( 
     $projectMetadata `
       | Where-Object { $_.runTests } `
@@ -155,14 +189,19 @@ function Get-TestableProjectsMetadata {
 }
 
 function Read-MetadataFile {
+  # yq flattens nested YAML sequences before the result is parsed as JSON.
+  # Allows yaml anchors to work as expected  
   $valuesJson = yq eval -o=json -c 'explode(.) | (.. | select(tag == "!!seq")) |= flatten' "./.github/project-metadata.yaml"
 
   return $valuesJson | ConvertFrom-Json
 }
 
-$changedFilesJson   = $ChangedFilesJson -replace '\\"', '"' # Normalise the json array
-$metadata             = Read-MetadataFile 
-$deployables        = @( $DeployablesJson | ConvertFrom-Json )
+# Inputs arrive from workflow expressions, where escaped quotes may remain in
+# the changed-files array. Normalize them before deserializing.
+$changedFilesJson   = $ChangedFilesJson -replace '\\"', '"'
+
+$metadata           = Read-MetadataFile 
+$deployables        = @( $BuildableJson | ConvertFrom-Json )
 $projects           = @( $metadata.projects | Where-Object { $_.name -in $deployables.name } )
 $changedFiles       = @( $changedFilesJson | ConvertFrom-Json )
 $shortSha           = $GitHubSHA.Substring(0, 7)
@@ -173,6 +212,8 @@ $projectMetadata    = Get-ProjectMetadata
 $buildableProjects  = Get-BuildableProjectsMetadata
 $testProjects       = Get-TestableProjectsMetadata
 
+# Return both the filtered collections and boolean flags for workflow
+# conditions in the calling GitHub Actions job.
 $payload = [pscustomobject]@{
   buildable        = $buildableProjects
   environments     = $environments
@@ -183,4 +224,6 @@ $payload = [pscustomobject]@{
 }
 
 
-ConvertTo-Json -InputObject $payload -Compress -Depth 10  # Pass the json back to the caller
+# Emit a single compact JSON document for the next workflow step.
+# Generally read by the setup workflow
+ConvertTo-Json -InputObject $payload -Compress -Depth 10

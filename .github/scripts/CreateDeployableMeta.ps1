@@ -87,7 +87,7 @@ function Get-ProjectRelatedPaths {
 }
 
 function Get-DeployableEnvironments {
-  return @( 
+  return ,@( 
     $EnvironmentsJson `
       | ConvertFrom-Json `
       | Where-Object { $_.deploy } `
@@ -130,7 +130,7 @@ function Get-ProjectMetadata {
 }
 
 function Get-BuildableProjectsMetadata {
-  return @( 
+  return ,@( 
       $projectMetadata `
         | Where-Object { $_.build } `
         | ForEach-Object {
@@ -146,7 +146,7 @@ function Get-BuildableProjectsMetadata {
 }
 
 function Get-TestableProjectsMetadata {
-  return @( 
+  return ,@( 
     $projectMetadata `
       | Where-Object { $_.runTests } `
       | ForEach-Object { $_.testProjects } `

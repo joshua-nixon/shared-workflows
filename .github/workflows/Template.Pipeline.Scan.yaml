@@ -64,11 +64,20 @@ jobs:
         run: |
           if [ -s trivy-results.json ]; then
             trivy convert trivy-results.json --format sarif    --output trivy-results.sarif
-            trivy convert trivy-results.json --format template --output trivy-summary.md    --template "@.github/trivy-report.tpl"
+            trivy convert trivy-results.json --format table    --output trivy-table.sarif
           fi
 
-      - name: Upload Trivy SARIF results
+      - name: Upload Trivy SARIF Results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
+
+      - name: Publish Trivy Results
+        if: always()
+        run: |
+          if [ -s trivy-summary.md ]; then
+            echo "## Trivy Scan summary" >> $GITHUB_STEP_SUMMARY
+            cat trivy-table.md >> $GITHUB_STEP_SUMMARY
+            echo "<hr>" >> $GITHUB_STEP_SUMMARY
+          fi

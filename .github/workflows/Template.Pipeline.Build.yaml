@@ -64,7 +64,7 @@ jobs:
             subscription-id: ${{ inputs.azure-subscription-id }}
             registry: ${{ inputs.azure-registry }}
 
-      - name: Build and push ${{ matrix.project.name }}
+      - name: Build ${{ matrix.project.name }}
         uses: docker/build-push-action@v7
         with:
           push: true
@@ -74,7 +74,7 @@ jobs:
           file: ${{ matrix.project.dockerfilePath }}
           tags: ${{ matrix.project.imageName }}
 
-      - name: Run Trivy scan
+      - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@v0.36.0
         if: inputs.enable-trivy
         with:
@@ -90,8 +90,7 @@ jobs:
         if: always() && inputs.enable-trivy
         run: |
           if [ -s trivy-report.txt ]; then
-            echo "### Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
-            echo "---" >> $GITHUB_STEP_SUMMARY
+            echo "<h2>Trivy Scan Results</h2>" >> $GITHUB_STEP_SUMMARY
             echo '```text' >> $GITHUB_STEP_SUMMARY
             cat trivy-report.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY

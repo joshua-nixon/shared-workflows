@@ -31,6 +31,10 @@ on:
         required: true
         type: string
 
+      enable-trivy:
+        type: boolean
+        default: false
+
 permissions:
   id-token: write
   contents: read
@@ -69,3 +73,14 @@ jobs:
           context: ${{ matrix.project.context }}
           file: ${{ matrix.project.dockerfilePath }}
           tags: ${{ matrix.project.imageName }}
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        if: ${{ inputs.enable-trivy }}
+        with:
+          image-ref: ${{ matrix.deployable.imageName }}
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true

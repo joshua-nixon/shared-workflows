@@ -51,6 +51,10 @@ on:
         type: string
         default: ''
 
+      enable-trivy:
+        type: boolean
+        default: false
+
     secrets:
       GITOPS_REPO_TOKEN:
         required: true
@@ -84,21 +88,9 @@ jobs:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      enable-trivy: ${{ inputs.enable-trivy }}
       azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID }}
       azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID }}
-      azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
-      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
-
-  scan:
-    needs:
-      - setup
-      - build
-    uses: ./.github/workflows/Template.Pipeline.Scan.yaml
-    with:
-      matrix-json:  ${{ needs.setup.outputs.buildable-json }}
-      should-run:   ${{ needs.setup.outputs.has-any-buildable == 'true' }}
-      azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID  }}
-      azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID  }}
       azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
       azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
@@ -107,7 +99,6 @@ jobs:
       - setup
       - test
       - build
-      - scan
     if: |
       !cancelled() && 
       !failure() && 

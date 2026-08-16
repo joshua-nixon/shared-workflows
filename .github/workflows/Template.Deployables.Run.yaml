@@ -9,31 +9,31 @@ on:
 
       buildable-json:
         type: string
-        required: true
+        default: '[]'
 
       sparse-checkout:
         type: string
         default: ''
 
       azure-client-id:
-        required: true
         type: string
+        default: ''
 
       azure-tenant-id:
-        required: true
         type: string
+        default: ''
 
       azure-subscription-id:
-        required: true
         type: string
+        default: ''
 
       azure-registry:
-        required: true
         type: string
+        default: ''
 
       gitops-repository:
-        required: true
         type: string
+        default: ''
 
       deploy-action:
         type: string
@@ -72,10 +72,10 @@ jobs:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
-      azure-client-id: ${{ inputs.azure-client-id }}
-      azure-tenant-id: ${{ inputs.azure-tenant-id }}
-      azure-subscription-id: ${{ inputs.azure-subscription-id }}
-      azure-registry: ${{ inputs.azure-registry }}
+      azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
+      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
   scan:
     needs:
@@ -83,12 +83,12 @@ jobs:
       - build
     uses: ./.github/workflows/Template.Deployables.Scan.yaml
     with:
-      matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
-      azure-client-id: ${{ inputs.azure-client-id }}
-      azure-tenant-id: ${{ inputs.azure-tenant-id }}
-      azure-subscription-id: ${{ inputs.azure-subscription-id }}
-      azure-registry: ${{ inputs.azure-registry }}
+      matrix-json:  ${{ needs.setup.outputs.buildable-json }}
+      should-run:   ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID  }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID  }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
+      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
   deploy:
     needs:
@@ -105,7 +105,7 @@ jobs:
     uses: ./.github/workflows/Template.Deployables.Deploy.yaml
     with:
       deploy-action: ${{ inputs.deploy-action }}
-      gitops-repository: ${{ inputs.gitops-repository }}
+      gitops-repository: ${{ vars.GH_GITOPS_REPO || inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environment-json: ${{ needs.setup.outputs.environment-json }}
     secrets:

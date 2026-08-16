@@ -33,7 +33,7 @@ jobs:
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.test-projects-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-test-projects-json }}
+      has-matrix-json: ${{ needs.setup.outputs.has-test-projects-json == 'true' }}
 
   build:
     needs:
@@ -42,7 +42,7 @@ jobs:
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json }}
+      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
 
   # scan:
   #   needs:
@@ -51,7 +51,7 @@ jobs:
   #   uses: ./.github/workflows/Template.Deployables.Scan.yaml
   #   with:
   #     matrix-json: ${{ needs.setup.outputs.buildable-json }}
-  #     has-matrix-json: ${{ needs.setup.outputs.has-buildable-json }}
+  #     has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
 
   deploy:
     needs:

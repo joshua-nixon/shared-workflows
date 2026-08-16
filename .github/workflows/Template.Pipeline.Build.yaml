@@ -76,7 +76,7 @@ jobs:
 
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@v0.36.0
-        if: ${{ inputs.enable-trivy }}
+        if: inputs.enable-trivy
         with:
           image-ref: ${{ matrix.project.imageName }}
           scanners: vuln
@@ -90,7 +90,8 @@ jobs:
         if: always() && inputs.enable-trivy
         run: |
           if [ -s trivy-report.txt ]; then
-            echo "### 🛡️ Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo "### Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo "---" >> $GITHUB_STEP_SUMMARY
             echo '```text' >> $GITHUB_STEP_SUMMARY
             cat trivy-report.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY

@@ -1,4 +1,4 @@
-name: Template.Deployables.Dispatch
+name: Template.Deployables.Deploy
 
 on:
   workflow_call:
@@ -22,15 +22,14 @@ permissions:
 
 jobs:
   dispatch:
-    name: Dispatch ${{ matrix.deployable.name }} ( ${{ matrix.environment.name }} )
+    name: Deploy ${{ matrix.deployable.name }} ( ${{ matrix.environment.name }} )
     runs-on: ubuntu-latest
     strategy:
       matrix:
         deployable: ${{ fromJSON(inputs.matrix-json) }}
         environment: ${{ fromJSON(inputs.environments-json) }}
     steps:
-      - if: ${{ matrix.environment.deploy == true }}
-        uses: peter-evans/repository-dispatch@v4
+      - uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.GITOPS_REPO_PAT }}
           repository: nixonjoshua98/nixon-gitops

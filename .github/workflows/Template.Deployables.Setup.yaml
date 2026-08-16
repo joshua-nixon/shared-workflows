@@ -4,18 +4,33 @@ on:
   workflow_call:
     inputs:
       deployables-json:
-        description: '[{ key, build }]'
+        description: '[{ name, build }]'
         required: true
         type: string
+
+      environments-json:
+        description: '[{ name, build }]'
+        required: true
+        type: string
+
     outputs:
       test-projects-json:
         value: ${{ jobs.setup.outputs.test-projects-json }}
+
       has-test-projects-json:
         value: ${{ jobs.setup.outputs.has-test-projects-json }}
+
+      environments-json:
+        value: ${{ jobs.setup.outputs.environments-json }}
+
       buildable-json:
         value: ${{ jobs.setup.outputs.buildable-json }}
+
       has-buildable-json:
         value: ${{ jobs.setup.outputs.has-buildable-json }}
+
+      has-any-deployable:
+        value: ${{ jobs.setup.outputs.has-any-deployable }}
 
 permissions:
   contents: read
@@ -26,8 +41,10 @@ jobs:
     outputs:
       test-projects-json: ${{ steps.metadata.outputs.test-projects-json }}
       has-test-projects-json: ${{ steps.metadata.outputs.has-test-projects-json }}
+      environments-json: ${{ steps.metadata.outputs.environments-json }}
       buildable-json: ${{ steps.metadata.outputs.buildable-json }}
       has-buildable-json: ${{ steps.metadata.outputs.has-buildable-json }}
+      has-any-deployable: ${{ steps.metadata.outputs.has-any-deployable }}
     steps:
       - name: Checkout .github
         uses: actions/checkout@v7
@@ -50,7 +67,7 @@ jobs:
         with:
           json: true
           
-      - name: Create deployable metadata
+      - name: Create json data
         id: metadata
         shell: pwsh
         env:
@@ -58,12 +75,22 @@ jobs:
           AZURE_REGISTRY: ${{ vars.AZURE_REGISTRY }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           DEPLOYABLES_JSON: ${{ inputs.deployables-json }}
+          ENVIRONMENTS_JSON: ${{ inputs.environments-json }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           CHANGED_FILES_JSON: ${{ steps.changed.outputs.all_changed_files }}
         run: |
           function Write-Env($name, $value) {
             "$name=$value" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
+
+          $environments = @()
+          if (-not [string]::IsNullOrWhiteSpace($env:ENVIRONMENTS_JSON)) {
+            $environments = @( $env:ENVIRONMENTS_JSON | ConvertFrom-Json )
+          }
+
+          $filteredEnvironments = @( $environments | ForEach-Object { [pscustomobject]@{ name = $_.name } } )
+          $environmentsJson     = ConvertTo-Json -InputObject ([object[]]$filteredEnvironments) -Compress
+          Write-Env "environments-json" $environmentsJson
 
           $metadataJson = & _shared/.github/scripts/CreateDeployableMeta.ps1 `
             -DeployablesJson    $env:DEPLOYABLES_JSON `
@@ -78,9 +105,11 @@ jobs:
           $buildableMetadata  = @( $metadata | Where-Object { $_.build } )
           $buildableJson      = ConvertTo-Json -InputObject ([object[]]$buildableMetadata) -Compress
           $hasBuildable       = ($buildableMetadata.Count -gt 0).ToString().ToLower()
+          $hasAnyDeployable   = (($buildableMetadata.Count -gt 0) -and ($environments.Count -gt 0)).ToString().ToLower()
 
           Write-Env "buildable-json"      $buildableJson
           Write-Env "has-buildable-json"  $hasBuildable
+          Write-Env "has-any-deployable"  $hasAnyDeployable
 
           $testMetadata       = @( $metadata | Where-Object { $_.runTests } )
           $testProjectMatrix  = @( $testMetadata | ForEach-Object { $_.testProjects } | Sort-Object -Property path -Unique )

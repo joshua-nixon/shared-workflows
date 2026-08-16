@@ -24,6 +24,7 @@ jobs:
     uses: ./.github/workflows/Template.Deployables.Setup.yaml
     with:
       deployables-json: ${{ inputs.deployables-json }}
+      environments-json: ${{ inputs.environments-json }}
 
   test:
     needs: 
@@ -52,15 +53,21 @@ jobs:
   #     matrix-json: ${{ needs.setup.outputs.buildable-json }}
   #     has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
 
-  dispatch:
+  deploy:
     needs:
       - setup
       - test
       - build
       # - scan
-    if: ${{ !cancelled() && !failure() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    uses: ./.github/workflows/Template.Deployables.Dispatch.yaml
+    if: |
+      ${{ !cancelled() && 
+          !failure() && 
+          !contains(needs.*.result, 'failure') && 
+          !contains(needs.*.result, 'cancelled') &&  
+          ${{ needs.setup.outputs.has-any-deployable == 'true' }}
+      }}
+    uses: ./.github/workflows/Template.Deployables.Deploy.yaml
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      environments-json: ${{ inputs.environments-json }}
+      environments-json: ${{ needs.setup.outputs.environments-json }}
     secrets: inherit

@@ -53,7 +53,7 @@ jobs:
     with:
       buildable-json: ${{ inputs.buildable-json }}
       environment-json: ${{ inputs.environment-json }}
-      azure-registry: ${{ inputs.azure-registry }}
+      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
   test:
     needs: 

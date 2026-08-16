@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, context, dockerfilePath, proposedImage }]'
+        description: '[{ name, eventName, context, dockerfilePath, proposedImage }]'
         required: true
         type: string
 

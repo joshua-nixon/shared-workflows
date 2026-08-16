@@ -123,20 +123,7 @@ function Get-ProjectMetadata {
         context         = $context  
         proposedImage   = $proposedImage
         runTests        = $runTests
-      }
-      
-      Write-Host "---"
-
-      Write-KeyValue "Name"           $name
-      Write-KeyValue "Project"        $projectPath
-      Write-KeyValue "Changed"        $hasChanged
-      Write-KeyValue "Build"          $build
-      Write-KeyValue "Context"        $context
-      Write-KeyValue "Run tests"      $runTests
-      Write-KeyValue "Event name"     $eventName
-      Write-KeyValue "Dockerfile"     $dockerfilePath
-      Write-KeyValue "Related paths"  $relatedPaths
-      Write-KeyValue "Image"          $proposedImage
+      }    
   }
 
   return $result
@@ -195,4 +182,9 @@ $payload = [pscustomobject]@{
   hasAnyDeployable = (($buildableProjects.Count -gt 0) -and ($environments.Count -gt 0))
 }
 
-ConvertTo-Json -InputObject $payload -Compress -Depth 10
+
+$payloadJson = ConvertTo-Json -InputObject $payload -Compress -Depth 10
+
+Write-KeyValue "Metadata" $payloadJson
+
+$payloadJson # Pass the json back to the caller

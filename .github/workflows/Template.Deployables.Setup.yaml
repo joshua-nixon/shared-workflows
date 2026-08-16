@@ -88,44 +88,25 @@ jobs:
             "$name=$value" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
 
-          # Filter out the environments which are not beng deployed to
-          # The output looks like [ { name: string } ] - It being empty is possible
-
-          $environments     = @( $env:ENVIRONMENTS_JSON | ConvertFrom-Json | Where-Object { $_.deploy } )
-          $environmentsJson = ConvertTo-Json -InputObject ([object[]]$environments) -Compress
-
-          Write-Env "environments-json" $environmentsJson
-
-          # Grab all the metadata needed, we have this in a seperate script so its easier to work with.
-
           $metadataJson = & _shared/.github/scripts/CreateDeployableMeta.ps1 `
             -DeployablesJson    $env:DEPLOYABLES_JSON `
             -ChangedFilesJson   $env:CHANGED_FILES_JSON `
             -GitHubSHA          $env:GITHUB_SHA_VALUE `
             -GitHubRefName      $env:GITHUB_REF_NAME `
             -ContainerRegistry  $env:AZURE_REGISTRY `
-            -GitHubEventName    $env:GITHUB_EVENT_NAME
+            -GitHubEventName    $env:GITHUB_EVENT_NAME `
+            -EnvironmentsJson   $env:ENVIRONMENTS_JSON
 
-          $metadata = @( $metadataJson | ConvertFrom-Json )
+          $metadata = $metadataJson | ConvertFrom-Json
 
-          # Filter the project metadata so that we only return the projects which are being built.
-          # Additional bits of metadata include test projects, paths, docker build context etc.
-
-          $buildableMetadata  = @( $metadata | Where-Object { $_.build } )
-          $buildableJson      = ConvertTo-Json -InputObject ([object[]]$buildableMetadata) -Compress
-          $hasBuildable       = ($buildableMetadata.Count -gt 0).ToString().ToLower()
-          $hasAnyDeployable   = (($buildableMetadata.Count -gt 0) -and ($environments.Count -gt 0)).ToString().ToLower()
+          $buildableJson    = ConvertTo-Json -InputObject ([object[]]@($metadata.buildable)) -Compress
+          $environmentsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.environments)) -Compress
+          $testProjectsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.testProjects)) -Compress
 
           Write-Env "buildable-json"      $buildableJson
-          Write-Env "has-any-buildable"   $hasBuildable
-          Write-Env "has-any-deployable"  $hasAnyDeployable
+          Write-Env "environments-json"   $environmentsJson
+          Write-Env "test-projects-json"  $testProjectsJson
 
-          # Similar to the buildable json, we create a filtered list of all test projects involed in the workflow
-
-          $testMetadata       = @( $metadata | Where-Object { $_.runTests } )
-          $testProjectMatrix  = @( $testMetadata | ForEach-Object { $_.testProjects } | Sort-Object -Property path -Unique )
-          $testProjectsJson   = ConvertTo-Json -InputObject ([object[]]$testProjectMatrix) -Compress
-          $hasTestProjects    = ($testProjectMatrix.Count -gt 0).ToString().ToLower()
-
-          Write-Env "test-projects-json"      $testProjectsJson
-          Write-Env "has-any-testable"  $hasTestProjects
+          Write-Env "has-any-buildable"  $metadata.hasAnyBuildable.ToString().ToLower()
+          Write-Env "has-any-testable"   $metadata.hasAnyTestable.ToString().ToLower()
+          Write-Env "has-any-deployable" $metadata.hasAnyDeployable.ToString().ToLower()

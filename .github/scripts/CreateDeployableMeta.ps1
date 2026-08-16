@@ -15,7 +15,10 @@ param(
   [string]$ContainerRegistry,
 
   [Parameter(Mandatory)]
-  [string]$GitHubEventName
+  [string]$GitHubEventName,
+
+  [Parameter(Mandatory)]
+  [string]$EnvironmentsJson
 )
 
 function Write-KeyValue {
@@ -83,65 +86,113 @@ function Get-ProjectRelatedPaths {
   return $relatedPaths
 }
 
-$ChangedFilesJson = $ChangedFilesJson -replace '\\"', '"' # Normalise the array
-
-$valuesFileName = "./.github/project-metadata.yaml"
-
-# Read and explodes the yaml anchors
-$valuesJson = yq eval -o=json -c 'explode(.) | (.. | select(tag == "!!seq")) |= flatten' $valuesFileName
-
-$values         = $valuesJson | ConvertFrom-Json
-$deployables    = @( $DeployablesJson | ConvertFrom-Json )
-$projects       = @( $values.projects | Where-Object { $_.name -in $deployables.name } )
-$changedFiles   = @( $ChangedFilesJson | ConvertFrom-Json )
-$shortSha       = $GitHubSHA.Substring(0, 7)
-$timestamp      = Get-Date -Format "yyyyMMdd-HHmmss"
-$branchName     = ($GitHubRefName.ToLowerInvariant() -replace '[^a-z0-9_.-]', '-').Trim('-.')
-
-$result = @()
-
-Write-KeyValue "Deployables"    $DeployablesJson
-Write-KeyValue "Changed files"  $changedFiles
-
-foreach ($project in $projects) {
-    $deployable       = $deployables | Where-Object { $_.name -eq $project.name } | Select-Object -First 1 
-    $projectPath      = $project.path
-    $name             = [System.IO.Path]::GetFileNameWithoutExtension($projectPath)
-    $build            = $deployable.build
-    $eventName        = $project.name
-    $dockerfilePath   = Get-DockerfilePath $project
-    $relatedPaths     = Get-ProjectRelatedPaths $project
-    $hasChanged       = Test-ProjectChanged $relatedPaths $changedFiles
-    $testProjects     = @(Get-TestProjects $project)
-    $context          = $project.context
-    $proposedImage    = Create-ProposedImage $project
-    $runTests         = $build -or ($GitHubEventName -ne "workflow_dispatch")   
-
-    $result += [pscustomobject]@{
-      build           = $build
-      changed         = $hasChanged
-      name            = $name
-      projectPath     = $projectPath
-      eventName       = $eventName
-      dockerfilePath  = $dockerfilePath
-      testProjects    = $testProjects
-      context         = $context  
-      proposedImage   = $proposedImage
-      runTests        = $runTests
-    }
-    
-    Write-Host "---"
-
-    Write-KeyValue "Name"           $name
-    Write-KeyValue "Project"        $projectPath
-    Write-KeyValue "Changed"        $hasChanged
-    Write-KeyValue "Build"          $build
-    Write-KeyValue "Context"        $context
-    Write-KeyValue "Run tests"      $runTests
-    Write-KeyValue "Event name"     $eventName
-    Write-KeyValue "Dockerfile"     $dockerfilePath
-    Write-KeyValue "Related paths"  $relatedPaths
-    Write-KeyValue "Image"          $proposedImage
+function Get-DeployableEnvironments {
+  return @( 
+    $EnvironmentsJson `
+      | ConvertFrom-Json `
+      | Where-Object { $_.deploy } `
+      | ForEach-Object { [pscustomobject]@{ name = $_.name } } 
+  )
 }
 
-ConvertTo-Json -InputObject ([object[]]$result) -Compress -Depth 10
+function Get-ProjectMetadata {
+  $result = @()
+
+  foreach ($project in $projects) {
+      $deployable       = $deployables | Where-Object { $_.name -eq $project.name } | Select-Object -First 1 
+      $projectPath      = $project.path
+      $name             = [System.IO.Path]::GetFileNameWithoutExtension($projectPath)
+      $build            = $deployable.build
+      $eventName        = $project.name
+      $dockerfilePath   = Get-DockerfilePath $project
+      $relatedPaths     = Get-ProjectRelatedPaths $project
+      $hasChanged       = Test-ProjectChanged $relatedPaths $changedFiles
+      $testProjects     = @(Get-TestProjects $project)
+      $context          = $project.context
+      $proposedImage    = Create-ProposedImage $project
+      $runTests         = $build -or ($GitHubEventName -ne "workflow_dispatch")   
+
+      $result += [pscustomobject]@{
+        build           = $build
+        changed         = $hasChanged
+        name            = $name
+        projectPath     = $projectPath
+        eventName       = $eventName
+        dockerfilePath  = $dockerfilePath
+        testProjects    = $testProjects
+        context         = $context  
+        proposedImage   = $proposedImage
+        runTests        = $runTests
+      }
+      
+      Write-Host "---"
+
+      Write-KeyValue "Name"           $name
+      Write-KeyValue "Project"        $projectPath
+      Write-KeyValue "Changed"        $hasChanged
+      Write-KeyValue "Build"          $build
+      Write-KeyValue "Context"        $context
+      Write-KeyValue "Run tests"      $runTests
+      Write-KeyValue "Event name"     $eventName
+      Write-KeyValue "Dockerfile"     $dockerfilePath
+      Write-KeyValue "Related paths"  $relatedPaths
+      Write-KeyValue "Image"          $proposedImage
+  }
+
+  return $result
+}
+
+function Get-BuildableProjectsMetadata {
+  return @( 
+      $projectMetadata `
+        | Where-Object { $_.build } `
+        | ForEach-Object {
+          [pscustomobject]@{
+            build          = $_.build
+            name           = $_.name
+            context        = $_.context
+            dockerfilePath = $_.dockerfilePath
+            proposedImage  = $_.proposedImage
+          }
+        }
+      )
+}
+
+function Get-TestableProjectsMetadata {
+  return @( 
+    $projectMetadata `
+      | Where-Object { $_.runTests } `
+      | ForEach-Object { $_.testProjects } `
+      | Sort-Object -Property path -Unique
+    )
+}
+
+function Read-MetadataFile {
+  $valuesJson = yq eval -o=json -c 'explode(.) | (.. | select(tag == "!!seq")) |= flatten' "./.github/project-metadata.yaml"
+
+  return $valuesJson | ConvertFrom-Json
+}
+
+$changedFilesJson   = $ChangedFilesJson -replace '\\"', '"' # Normalise the json array
+$values             = Read-MetadataFile 
+$deployables        = @( $DeployablesJson | ConvertFrom-Json )
+$projects           = @( $values.projects | Where-Object { $_.name -in $deployables.name } )
+$changedFiles       = @( $changedFilesJson | ConvertFrom-Json )
+$shortSha           = $GitHubSHA.Substring(0, 7)
+$timestamp          = Get-Date -Format "yyyyMMdd-HHmmss"
+$branchName         = ($GitHubRefName.ToLowerInvariant() -replace '[^a-z0-9_.-]', '-').Trim('-.')
+$environments       = Get-DeployableEnvironments
+$projectMetadata    = Get-ProjectMetadata
+$buildableProjects  = Get-BuildableProjectsMetadata
+$testProjects       = Get-TestableProjectsMetadata
+
+$payload = [pscustomobject]@{
+  buildable        = $buildableProjects
+  environments     = $environments
+  testProjects     = $testProjects
+  hasAnyBuildable  = ($buildableProjects.Count -gt 0)
+  hasAnyTestable   = ($testProjects.Count -gt 0)
+  hasAnyDeployable = (($buildableProjects.Count -gt 0) -and ($environments.Count -gt 0))
+}
+
+ConvertTo-Json -InputObject $payload -Compress -Depth 10

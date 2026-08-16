@@ -40,12 +40,6 @@ jobs:
       matrix:
         project: ${{ fromJSON(inputs.matrix-json) }}
     steps:
-      - name: Download Image Artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ matrix.project.imageName }}
-          path: /tmp
-
       - name: Azure Container Registry Login
         uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.6
         with:
@@ -53,17 +47,6 @@ jobs:
           tenant-id: ${{ inputs.azure-tenant-id }}
           subscription-id: ${{ inputs.azure-subscription-id }}
           registry: ${{ inputs.azure-registry }}
-
-      - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          input: /tmp/${{ matrix.project.imageName }}.tar
-          scanners: vuln
-          format: table
-          output: trivy-results.json
-          exit-code: '1'
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
 
       - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@v0.36.0

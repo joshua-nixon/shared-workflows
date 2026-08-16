@@ -15,6 +15,22 @@ on:
         type: string
         default: ''
 
+      azure-client-id:
+        required: true
+        type: string
+
+      azure-tenant-id:
+        required: true
+        type: string
+
+      azure-subscription-id:
+        required: true
+        type: string
+
+      azure-registry:
+        required: true
+        type: string
+
       gitops-repository:
         required: false
         type: string
@@ -33,6 +49,7 @@ jobs:
     with:
       deployables-json: ${{ inputs.deployables-json }}
       environments-json: ${{ inputs.environments-json }}
+      azure-registry: ${{ inputs.azure-registry }}
 
   test:
     needs: 
@@ -51,6 +68,10 @@ jobs:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      azure-client-id: ${{ inputs.azure-client-id }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id }}
+      azure-registry: ${{ inputs.azure-registry }}
 
   scan:
     needs:
@@ -60,6 +81,10 @@ jobs:
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      azure-client-id: ${{ inputs.azure-client-id }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id }}
+      azure-registry: ${{ inputs.azure-registry }}
 
   deploy:
     needs:
@@ -79,4 +104,4 @@ jobs:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environments-json: ${{ needs.setup.outputs.environments-json }}
     secrets:
-      GITOPS_REPO_TOKEN: ${{ secrets.GIOPS_REPO_PAT }}
+      GITOPS_REPO_TOKEN: ${{ secrets.GITOPS_REPO_TOKEN }}

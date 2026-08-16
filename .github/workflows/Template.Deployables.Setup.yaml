@@ -13,6 +13,11 @@ on:
         required: true
         type: string
 
+      azure-registry:
+        description: Azure Container Registry name
+        required: true
+        type: string
+
     outputs:
       test-projects-json:
         value: ${{ jobs.setup.outputs.test-projects-json }}
@@ -72,7 +77,7 @@ jobs:
         shell: pwsh
         env:
           GITHUB_SHA_VALUE: ${{ github.sha }}
-          AZURE_REGISTRY: ${{ vars.AZURE_REGISTRY }}
+          AZURE_REGISTRY: ${{ inputs.azure-registry }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           DEPLOYABLES_JSON: ${{ inputs.deployables-json }}
           ENVIRONMENTS_JSON: ${{ inputs.environments-json }}

@@ -2,16 +2,19 @@ name: Azure ACR Login
 
 inputs:
   client-id:
-    description: Azure service principal client ID
+    type: string
     required: true
+
   tenant-id:
-    description: Azure tenant ID
+    type: string
     required: true
+
   subscription-id:
-    description: Azure subscription ID
+    type: string
     required: true
+
   registry:
-    description: Azure Container Registry hostname
+    type: string
     required: true
     
 runs:

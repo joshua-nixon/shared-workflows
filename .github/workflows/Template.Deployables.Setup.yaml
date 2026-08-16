@@ -99,7 +99,7 @@ jobs:
 
           $metadata = $metadataJson | ConvertFrom-Json
 
-          $buildableJson    = ConvertTo-Json -InputObject ([object[]]@($metadata.buildable)) -Compress
+          $buildableJson    = ConvertTo-Json -InputObject ([object[]]@($metadata.buildable))    -Compress
           $environmentsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.environments)) -Compress
           $testProjectsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.testProjects)) -Compress
 
@@ -110,3 +110,5 @@ jobs:
           Write-Env "has-any-buildable"  $metadata.hasAnyBuildable.ToString().ToLower()
           Write-Env "has-any-testable"   $metadata.hasAnyTestable.ToString().ToLower()
           Write-Env "has-any-deployable" $metadata.hasAnyDeployable.ToString().ToLower()
+
+          $metadata | ConvertTo-Json -Depth 10  # Write to the host

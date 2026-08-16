@@ -135,7 +135,6 @@ function Get-BuildableProjectsMetadata {
         | Where-Object { $_.build } `
         | ForEach-Object {
           [pscustomobject]@{
-            build          = $_.build
             name           = $_.name
             context        = $_.context
             dockerfilePath = $_.dockerfilePath
@@ -183,8 +182,4 @@ $payload = [pscustomobject]@{
 }
 
 
-$payloadJson = ConvertTo-Json -InputObject $payload -Compress -Depth 10
-
-Write-KeyValue "Metadata" $payloadJson
-
-$payloadJson # Pass the json back to the caller
+ConvertTo-Json -InputObject $payload -Compress -Depth 10  # Pass the json back to the caller

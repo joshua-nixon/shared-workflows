@@ -53,7 +53,7 @@ on:
 
       enable-trivy:
         type: boolean
-        default: false
+        default: true
 
     secrets:
       GITOPS_REPO_TOKEN:

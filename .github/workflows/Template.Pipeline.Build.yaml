@@ -33,7 +33,7 @@ on:
 
       enable-trivy:
         type: boolean
-        default: true
+        default: false
 
 permissions:
   id-token: write

@@ -60,12 +60,11 @@ jobs:
       - build
       # - scan
     if: |
-      ${{ !cancelled() && 
-          !failure() && 
-          !contains(needs.*.result, 'failure') && 
-          !contains(needs.*.result, 'cancelled') &&  
-          ${{ needs.setup.outputs.has-any-deployable == 'true' }}
-      }}
+      !cancelled() && 
+      !failure() && 
+      !contains(needs.*.result, 'failure') && 
+      !contains(needs.*.result, 'cancelled') &&  
+      needs.setup.outputs.has-any-deployable == 'true'
     uses: ./.github/workflows/Template.Deployables.Deploy.yaml
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}

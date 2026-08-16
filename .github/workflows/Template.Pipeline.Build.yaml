@@ -81,6 +81,17 @@ jobs:
           image-ref: ${{ matrix.project.imageName }}
           scanners: vuln
           format: table
+          output: trivy-report.txt
           exit-code: '1'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+
+      - name: Publish Trivy Summary
+        if: always() && inputs.enable-trivy
+        run: |
+          if [ -s trivy-report.txt ]; then
+            echo "### 🛡️ Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            cat trivy-report.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi

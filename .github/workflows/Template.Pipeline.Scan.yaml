@@ -1,10 +1,9 @@
-name: Template.Deployables.Scan
+name: Template.Pipeline.Scan
 
 on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, imageName }]'
         required: true
         type: string
 

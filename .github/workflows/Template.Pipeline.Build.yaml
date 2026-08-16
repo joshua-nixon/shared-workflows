@@ -1,10 +1,9 @@
-name: Template.Deployables.Build
+name: Template.Pipeline.Build
 
 on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, eventName, context, dockerfilePath, imageName }]'
         required: true
         type: string
 

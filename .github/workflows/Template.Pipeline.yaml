@@ -1,4 +1,16 @@
-name: Template.Deployables.Run
+name: Template.Pipeline
+
+# # # # # # # # # #
+# Runs through all the provided deployables, and environmentts with each step running in parallel where possible.
+# All deployables must succeed the step before moving on, which prevents partial-deployments.
+#
+# Vars
+#   AZURE_SUB_ID
+#   AZURE_REGISTRY
+#   AZURE_TENANT_ID
+#   AZURE_CLIENT_ID
+#   GH_GITOPS_REPO
+# # # # # # # # # #
 
 on:
   workflow_call:
@@ -49,7 +61,7 @@ permissions:
 
 jobs:
   setup:
-    uses: ./.github/workflows/Template.Deployables.Setup.yaml
+    uses: ./.github/workflows/Template.Pipeline.Setup.yaml
     with:
       buildable-json: ${{ inputs.buildable-json }}
       environment-json: ${{ inputs.environment-json }}
@@ -58,7 +70,7 @@ jobs:
   test:
     needs: 
       - setup
-    uses: ./.github/workflows/Template.Deployables.Tests.yaml
+    uses: ./.github/workflows/Template.Pipeline.Tests.yaml
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.test-projects-json }}
@@ -67,7 +79,7 @@ jobs:
   build:
     needs:
       - setup
-    uses: ./.github/workflows/Template.Deployables.Build.yaml
+    uses: ./.github/workflows/Template.Pipeline.Build.yaml
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
@@ -81,7 +93,7 @@ jobs:
     needs:
       - setup
       - build
-    uses: ./.github/workflows/Template.Deployables.Scan.yaml
+    uses: ./.github/workflows/Template.Pipeline.Scan.yaml
     with:
       matrix-json:  ${{ needs.setup.outputs.buildable-json }}
       should-run:   ${{ needs.setup.outputs.has-any-buildable == 'true' }}
@@ -102,10 +114,10 @@ jobs:
       !contains(needs.*.result, 'failure') && 
       !contains(needs.*.result, 'cancelled') &&  
       needs.setup.outputs.has-any-deployable == 'true'
-    uses: ./.github/workflows/Template.Deployables.Deploy.yaml
+    uses: ./.github/workflows/Template.Pipeline.Deploy.yaml
     with:
       deploy-action: ${{ inputs.deploy-action }}
-      gitops-repository: ${{ vars.GH_GITOPS_REPO || inputs.gitops-repository }}
+      gitops-repository: ${{ inputs.gitops-repository || vars.GH_GITOPS_REPO }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environment-json: ${{ needs.setup.outputs.environment-json }}
     secrets:

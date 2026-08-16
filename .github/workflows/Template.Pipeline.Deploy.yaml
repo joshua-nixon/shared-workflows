@@ -1,15 +1,12 @@
-name: Template.Deployables.Deploy
+name: Template.Pipeline.Deploy
 
 on:
   workflow_call:
     inputs:
-
-      # [{ name, imageName }]
       matrix-json:
         type: string
         required: true
 
-      # [ { name } ]
       environment-json:
         type: string
         default: '[]'

@@ -1,16 +1,15 @@
-name: Template.Deployables.Tests
+name: Template.Pipeline.Tests
 
 on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, path }]'
-        required: true
         type: string
+        required: true
 
       should-run:
-        required: true
         type: boolean
+        required: true
 
       sparse-checkout:
         type: string

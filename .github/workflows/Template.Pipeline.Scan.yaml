@@ -50,7 +50,6 @@ jobs:
 
       - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@v0.36.0
-        if: inputs.enable-trivy
         with:
           image-ref: ${{ matrix.project.imageName }}
           scanners: vuln
@@ -61,7 +60,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Convert Trivy Results
-        if: always() && inputs.enable-trivy
+        if: always()
         run: |
           if [ -s trivy-results.json ]; then
             trivy convert trivy-results.json --format sarif    --output trivy-results.sarif
@@ -70,6 +69,6 @@ jobs:
 
       - name: Upload Trivy SARIF results
         uses: github/codeql-action/upload-sarif@v3
-        if: always() && inputs.enable-trivy
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'

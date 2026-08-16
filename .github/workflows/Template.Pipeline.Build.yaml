@@ -53,7 +53,7 @@ jobs:
         - uses: docker/setup-buildx-action@v4
 
         - name: Login to Azure
-          uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.6
+          uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.7-preview
           with:
             client-id: ${{ inputs.azure-client-id }}
             tenant-id: ${{ inputs.azure-tenant-id }}

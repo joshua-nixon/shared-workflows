@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       test-projects-json: ${{ steps.metadata.outputs.test-projects-json }}
       has-any-testable: ${{ steps.metadata.outputs.has-any-testable }}
@@ -58,10 +58,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
-          ref: v1.6
+          ref: v1.7-preview
           path: _shared
           sparse-checkout: |
-            .github/scripts/CreateDeployableMeta.ps1
+            .github/scripts/CreatePipelineData.ps1
 
       - name: Get files changed
         id: changed
@@ -101,7 +101,7 @@ jobs:
           $testProjectsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.testProjects)) -Compress
 
           Write-Env "buildable-json"      $buildableJson
-          Write-Env "environment-json"   $environmentsJson
+          Write-Env "environment-json"    $environmentsJson
           Write-Env "test-projects-json"  $testProjectsJson
 
           Write-Env "has-any-buildable"  $metadata.hasAnyBuildable.ToString().ToLower()

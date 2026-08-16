@@ -29,7 +29,7 @@ permissions:
 jobs:
   dispatch:
     name: Deploy ${{ matrix.deployable.name }} ( ${{ matrix.environment.name }} )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     strategy:
       matrix:
         deployable: ${{ fromJSON(inputs.matrix-json) }}

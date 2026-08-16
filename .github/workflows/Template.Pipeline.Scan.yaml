@@ -64,7 +64,7 @@ jobs:
         run: |
           if [ -s trivy-results.json ]; then
             trivy convert trivy-results.json --format sarif    --output trivy-results.sarif
-            trivy convert trivy-results.json --format template --output trivy-summary.md    --template "@trivy/github-markdown.tpl"
+            trivy convert trivy-results.json --format template --output trivy-summary.md    --template "@.github/trivy-report.tpl"
           fi
 
       - name: Upload Trivy SARIF results

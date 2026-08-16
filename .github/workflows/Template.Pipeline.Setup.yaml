@@ -1,20 +1,17 @@
-name: Template.Deployables.Setup
+name: Template.Pipeline.Setup
 
 on:
   workflow_call:
     inputs:
       buildable-json:
-        description: '[{ name, build }]'
         required: true
         type: string
 
       environment-json:
-        description: '[{ name, deploy }]'
         required: true
         type: string
 
       azure-registry:
-        description: Azure Container Registry name
         required: true
         type: string
 
@@ -61,7 +58,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
-          ref: v1.5
+          ref: v1.6
           path: _shared
           sparse-checkout: |
             .github/scripts/CreateDeployableMeta.ps1

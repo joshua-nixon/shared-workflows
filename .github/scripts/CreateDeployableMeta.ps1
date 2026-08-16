@@ -1,9 +1,6 @@
 param(
 
-  # {
-  #   "name": "String",
-  #   "build": "Boolean"
-  # }
+  # { "name": "String", "build": "Boolean" }
   [Parameter(Mandatory)]
   [string]$BuildableJson,
 
@@ -23,10 +20,7 @@ param(
   [Parameter(Mandatory)]
   [string]$GitHubEventName,
 
-  # {
-  #   "name": "String",
-  #   "deploy": "Boolean"
-  # }
+  # { "name": "String", "deploy": "Boolean" }
   [Parameter(Mandatory)]
   [string]$EnvironmentsJson
 )
@@ -55,7 +49,7 @@ function Get-TestProjects {
   return
 }
 
-function Create-ProposedImage {
+function Create-ImageName {
   param([psobject]$Project)
 
   # Include a random suffix so independently created images do not share a tag.
@@ -139,7 +133,7 @@ function Get-ProjectMetadata {
       $hasChanged       = Test-ProjectChanged $relatedPaths $changedFiles
       $testProjects     = @(Get-TestProjects $project)
       $context          = $project.context
-      $proposedImage    = Create-ProposedImage $project
+      $imageName        = Create-ImageName $project
       $runTests         = $build -or ($GitHubEventName -ne "workflow_dispatch")   
 
       $result += [pscustomobject]@{
@@ -151,7 +145,7 @@ function Get-ProjectMetadata {
         dockerfilePath  = $dockerfilePath
         testProjects    = $testProjects
         context         = $context  
-        proposedImage   = $proposedImage
+        imageName       = $imageName
         runTests        = $runTests
       }    
   }
@@ -170,7 +164,7 @@ function Get-BuildableProjectsMetadata {
             name           = $_.name
             context        = $_.context
             dockerfilePath = $_.dockerfilePath
-            proposedImage  = $_.proposedImage
+            imageName  = $_.imageName
             eventName      = $_.eventName
           }
         }
@@ -222,7 +216,6 @@ $payload = [pscustomobject]@{
   hasAnyTestable   = ($testProjects.Count -gt 0)
   hasAnyDeployable = (($buildableProjects.Count -gt 0) -and ($environments.Count -gt 0))
 }
-
 
 # Emit a single compact JSON document for the next workflow step.
 # Generally read by the setup workflow

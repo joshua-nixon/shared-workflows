@@ -1,15 +1,12 @@
-name: Template.Deployables.Deploy
+name: Template.Pipeline.Deploy
 
 on:
   workflow_call:
     inputs:
-
-      # [{ name, proposedImage }]
       matrix-json:
         type: string
         required: true
 
-      # [ { name } ]
       environment-json:
         type: string
         default: '[]'
@@ -42,7 +39,7 @@ jobs:
         id: client-payload
         shell: pwsh
         env:
-          IMAGE: ${{ matrix.deployable.proposedImage }}
+          IMAGE: ${{ matrix.deployable.imageName }}
           ENVIRONMENT: ${{ matrix.environment.name }}
           DEPLOY_ACTION: ${{ inputs.deploy-action }}
         run: |

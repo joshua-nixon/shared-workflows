@@ -1,10 +1,9 @@
-name: Template.Deployables.Scan
+name: Template.Pipeline.Scan
 
 on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, proposedImage }]'
         required: true
         type: string
 
@@ -42,7 +41,7 @@ jobs:
         deployable: ${{ fromJSON(inputs.matrix-json) }}
     steps:
       - name: Azure Container Registry Login
-        uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.5
+        uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.6
         with:
           client-id: ${{ inputs.azure-client-id }}
           tenant-id: ${{ inputs.azure-tenant-id }}
@@ -52,7 +51,7 @@ jobs:
       - name: Scan image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ matrix.deployable.proposedImage }}
+          image-ref: ${{ matrix.deployable.imageName }}
           scanners: vuln
           format: table
           exit-code: '1'

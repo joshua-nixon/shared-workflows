@@ -1,4 +1,16 @@
-name: Template.Deployables.Run
+name: Template.Pipeline
+
+# # # # # # # # # #
+# Runs through all the provided deployables, and environmentts with each step running in parallel where possible.
+# All deployables must succeed the step before moving on, which prevents partial-deployments.
+#
+# Vars
+#   AZURE_SUB_ID
+#   AZURE_REGISTRY
+#   AZURE_TENANT_ID
+#   AZURE_CLIENT_ID
+#   GH_GITOPS_REPO
+# # # # # # # # # #
 
 on:
   workflow_call:
@@ -9,31 +21,31 @@ on:
 
       buildable-json:
         type: string
-        required: true
+        default: '[]'
 
       sparse-checkout:
         type: string
         default: ''
 
       azure-client-id:
-        required: true
         type: string
+        default: ''
 
       azure-tenant-id:
-        required: true
         type: string
+        default: ''
 
       azure-subscription-id:
-        required: true
         type: string
+        default: ''
 
       azure-registry:
-        required: true
         type: string
+        default: ''
 
       gitops-repository:
-        required: true
         type: string
+        default: ''
 
       deploy-action:
         type: string
@@ -49,16 +61,16 @@ permissions:
 
 jobs:
   setup:
-    uses: ./.github/workflows/Template.Deployables.Setup.yaml
+    uses: ./.github/workflows/Template.Pipeline.Setup.yaml
     with:
       buildable-json: ${{ inputs.buildable-json }}
       environment-json: ${{ inputs.environment-json }}
-      azure-registry: ${{ inputs.azure-registry }}
+      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
   test:
     needs: 
       - setup
-    uses: ./.github/workflows/Template.Deployables.Tests.yaml
+    uses: ./.github/workflows/Template.Pipeline.Tests.yaml
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.test-projects-json }}
@@ -67,28 +79,28 @@ jobs:
   build:
     needs:
       - setup
-    uses: ./.github/workflows/Template.Deployables.Build.yaml
+    uses: ./.github/workflows/Template.Pipeline.Build.yaml
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
-      azure-client-id: ${{ inputs.azure-client-id }}
-      azure-tenant-id: ${{ inputs.azure-tenant-id }}
-      azure-subscription-id: ${{ inputs.azure-subscription-id }}
-      azure-registry: ${{ inputs.azure-registry }}
+      azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
+      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
   scan:
     needs:
       - setup
       - build
-    uses: ./.github/workflows/Template.Deployables.Scan.yaml
+    uses: ./.github/workflows/Template.Pipeline.Scan.yaml
     with:
-      matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
-      azure-client-id: ${{ inputs.azure-client-id }}
-      azure-tenant-id: ${{ inputs.azure-tenant-id }}
-      azure-subscription-id: ${{ inputs.azure-subscription-id }}
-      azure-registry: ${{ inputs.azure-registry }}
+      matrix-json:  ${{ needs.setup.outputs.buildable-json }}
+      should-run:   ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID  }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID  }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
+      azure-registry: ${{ inputs.azure-registry || vars.AZURE_REGISTRY }}
 
   deploy:
     needs:
@@ -102,10 +114,10 @@ jobs:
       !contains(needs.*.result, 'failure') && 
       !contains(needs.*.result, 'cancelled') &&  
       needs.setup.outputs.has-any-deployable == 'true'
-    uses: ./.github/workflows/Template.Deployables.Deploy.yaml
+    uses: ./.github/workflows/Template.Pipeline.Deploy.yaml
     with:
       deploy-action: ${{ inputs.deploy-action }}
-      gitops-repository: ${{ inputs.gitops-repository }}
+      gitops-repository: ${{ inputs.gitops-repository || vars.GH_GITOPS_REPO }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environment-json: ${{ needs.setup.outputs.environment-json }}
     secrets:

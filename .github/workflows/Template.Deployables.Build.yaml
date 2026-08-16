@@ -4,17 +4,33 @@ on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ build, name, context, dockerfilePath, proposedImage }]'
+        description: '[{ name, eventName, context, dockerfilePath, proposedImage }]'
         required: true
         type: string
 
-      has-matrix-json:
+      should-run:
         required: true
         type: boolean
 
       sparse-checkout:
         type: string
         default: ''
+
+      azure-client-id:
+        required: true
+        type: string
+
+      azure-tenant-id:
+        required: true
+        type: string
+
+      azure-subscription-id:
+        required: true
+        type: string
+
+      azure-registry:
+        required: true
+        type: string
 
 permissions:
   id-token: write
@@ -23,7 +39,7 @@ permissions:
 jobs:
   build:
     name: Build ${{ matrix.project.name }}
-    if: ${{ inputs.has-matrix-json == true }}
+    if: ${{ inputs.should-run == true }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,12 +54,12 @@ jobs:
         - uses: docker/setup-buildx-action@v4
 
         - name: Login to Azure
-          uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.4
+          uses: nixonjoshua98/shared-workflows/.github/actions/azure-acr-login@v1.5
           with:
-            client-id: ${{ vars.AZURE_CLIENT_ID }}
-            tenant-id: ${{ vars.AZURE_TENANT_ID }}
-            subscription-id: ${{ vars.AZURE_SUB_ID }}
-            registry: ${{ vars.AZURE_REGISTRY }}
+            client-id: ${{ inputs.azure-client-id }}
+            tenant-id: ${{ inputs.azure-tenant-id }}
+            subscription-id: ${{ inputs.azure-subscription-id }}
+            registry: ${{ inputs.azure-registry }}
 
       - name: Build and push ${{ matrix.project.name }}
         uses: docker/build-push-action@v7

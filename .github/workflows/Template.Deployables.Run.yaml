@@ -3,17 +3,45 @@ name: Template.Deployables.Run
 on:
   workflow_call:
     inputs:
-      environment:
+      environment-json:
         type: string
-        required: true
+        default: '[]'
 
-      deployables-json:
+      buildable-json:
         type: string
         required: true
 
       sparse-checkout:
         type: string
         default: ''
+
+      azure-client-id:
+        required: true
+        type: string
+
+      azure-tenant-id:
+        required: true
+        type: string
+
+      azure-subscription-id:
+        required: true
+        type: string
+
+      azure-registry:
+        required: true
+        type: string
+
+      gitops-repository:
+        required: true
+        type: string
+
+      deploy-action:
+        type: string
+        default: ''
+
+    secrets:
+      GITOPS_REPO_TOKEN:
+        required: true
 
 permissions:
   id-token: write
@@ -23,7 +51,9 @@ jobs:
   setup:
     uses: ./.github/workflows/Template.Deployables.Setup.yaml
     with:
-      deployables-json: ${{ inputs.deployables-json }}
+      buildable-json: ${{ inputs.buildable-json }}
+      environment-json: ${{ inputs.environment-json }}
+      azure-registry: ${{ inputs.azure-registry }}
 
   test:
     needs: 
@@ -32,7 +62,7 @@ jobs:
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.test-projects-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-test-projects-json == 'true' }}
+      should-run: ${{ needs.setup.outputs.has-any-testable == 'true' }}
 
   build:
     needs:
@@ -41,7 +71,11 @@ jobs:
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
+      should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      azure-client-id: ${{ inputs.azure-client-id }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id }}
+      azure-registry: ${{ inputs.azure-registry }}
 
   scan:
     needs:
@@ -50,18 +84,29 @@ jobs:
     uses: ./.github/workflows/Template.Deployables.Scan.yaml
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
+      should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
+      azure-client-id: ${{ inputs.azure-client-id }}
+      azure-tenant-id: ${{ inputs.azure-tenant-id }}
+      azure-subscription-id: ${{ inputs.azure-subscription-id }}
+      azure-registry: ${{ inputs.azure-registry }}
 
-  dispatch:
+  deploy:
     needs:
       - setup
       - test
       - build
       - scan
-    if: ${{ !cancelled() && !failure() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-    uses: ./.github/workflows/Template.Deployables.Dispatch.yaml
+    if: |
+      !cancelled() && 
+      !failure() && 
+      !contains(needs.*.result, 'failure') && 
+      !contains(needs.*.result, 'cancelled') &&  
+      needs.setup.outputs.has-any-deployable == 'true'
+    uses: ./.github/workflows/Template.Deployables.Deploy.yaml
     with:
+      deploy-action: ${{ inputs.deploy-action }}
+      gitops-repository: ${{ inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      has-matrix-json: ${{ needs.setup.outputs.has-buildable-json == 'true' }}
-      environment: ${{ inputs.environment }}
-    secrets: inherit
+      environment-json: ${{ needs.setup.outputs.environment-json }}
+    secrets:
+      GITOPS_REPO_TOKEN: ${{ secrets.GITOPS_REPO_TOKEN }}

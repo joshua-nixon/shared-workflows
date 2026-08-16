@@ -3,19 +3,39 @@ name: Template.Deployables.Setup
 on:
   workflow_call:
     inputs:
-      deployables-json:
-        description: '[{ key, build }]'
+      buildable-json:
+        description: '[{ name, build }]'
         required: true
         type: string
+
+      environment-json:
+        description: '[{ name, deploy }]'
+        required: true
+        type: string
+
+      azure-registry:
+        description: Azure Container Registry name
+        required: true
+        type: string
+
     outputs:
       test-projects-json:
         value: ${{ jobs.setup.outputs.test-projects-json }}
-      has-test-projects-json:
-        value: ${{ jobs.setup.outputs.has-test-projects-json }}
+
+      environment-json:
+        value: ${{ jobs.setup.outputs.environment-json }}
+
       buildable-json:
         value: ${{ jobs.setup.outputs.buildable-json }}
-      has-buildable-json:
-        value: ${{ jobs.setup.outputs.has-buildable-json }}
+
+      has-any-testable:
+        value: ${{ jobs.setup.outputs.has-any-testable }}
+
+      has-any-buildable:
+        value: ${{ jobs.setup.outputs.has-any-buildable }}
+
+      has-any-deployable:
+        value: ${{ jobs.setup.outputs.has-any-deployable }}
 
 permissions:
   contents: read
@@ -25,9 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       test-projects-json: ${{ steps.metadata.outputs.test-projects-json }}
-      has-test-projects-json: ${{ steps.metadata.outputs.has-test-projects-json }}
+      has-any-testable: ${{ steps.metadata.outputs.has-any-testable }}
+      environment-json: ${{ steps.metadata.outputs.environment-json }}
       buildable-json: ${{ steps.metadata.outputs.buildable-json }}
-      has-buildable-json: ${{ steps.metadata.outputs.has-buildable-json }}
+      has-any-buildable: ${{ steps.metadata.outputs.has-any-buildable }}
+      has-any-deployable: ${{ steps.metadata.outputs.has-any-deployable }}
     steps:
       - name: Checkout .github
         uses: actions/checkout@v7
@@ -39,7 +61,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: nixonjoshua98/shared-workflows
-          ref: v1.4
+          ref: v1.5
           path: _shared
           sparse-checkout: |
             .github/scripts/CreateDeployableMeta.ps1
@@ -50,14 +72,15 @@ jobs:
         with:
           json: true
           
-      - name: Create deployable metadata
+      - name: Create json data
         id: metadata
         shell: pwsh
         env:
           GITHUB_SHA_VALUE: ${{ github.sha }}
-          AZURE_REGISTRY: ${{ vars.AZURE_REGISTRY }}
+          AZURE_REGISTRY: ${{ inputs.azure-registry }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
-          DEPLOYABLES_JSON: ${{ inputs.deployables-json }}
+          BUILDABLE_JSON: ${{ inputs.buildable-json }}
+          ENVIRONMENTS_JSON: ${{ inputs.environment-json }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           CHANGED_FILES_JSON: ${{ steps.changed.outputs.all_changed_files }}
         run: |
@@ -66,26 +89,26 @@ jobs:
           }
 
           $metadataJson = & _shared/.github/scripts/CreateDeployableMeta.ps1 `
-            -DeployablesJson    $env:DEPLOYABLES_JSON `
+            -BuildableJson      $env:BUILDABLE_JSON `
             -ChangedFilesJson   $env:CHANGED_FILES_JSON `
             -GitHubSHA          $env:GITHUB_SHA_VALUE `
             -GitHubRefName      $env:GITHUB_REF_NAME `
             -ContainerRegistry  $env:AZURE_REGISTRY `
-            -GitHubEventName    $env:GITHUB_EVENT_NAME
+            -GitHubEventName    $env:GITHUB_EVENT_NAME `
+            -EnvironmentsJson   $env:ENVIRONMENTS_JSON
 
-          $metadata = @( $metadataJson | ConvertFrom-Json )
+          $metadata = $metadataJson | ConvertFrom-Json
 
-          $buildableMetadata  = @( $metadata | Where-Object { $_.build } )
-          $buildableJson      = ConvertTo-Json -InputObject ([object[]]$buildableMetadata) -Compress
-          $hasBuildable       = ($buildableMetadata.Count -gt 0).ToString().ToLower()
+          $buildableJson    = ConvertTo-Json -InputObject ([object[]]@($metadata.buildable))    -Compress
+          $environmentsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.environments)) -Compress
+          $testProjectsJson = ConvertTo-Json -InputObject ([object[]]@($metadata.testProjects)) -Compress
 
           Write-Env "buildable-json"      $buildableJson
-          Write-Env "has-buildable-json"  $hasBuildable
+          Write-Env "environment-json"   $environmentsJson
+          Write-Env "test-projects-json"  $testProjectsJson
 
-          $testMetadata       = @( $metadata | Where-Object { $_.runTests } )
-          $testProjectMatrix  = @( $testMetadata | ForEach-Object { $_.testProjects } | Sort-Object -Property path -Unique )
-          $testProjectsJson   = ConvertTo-Json -InputObject ([object[]]$testProjectMatrix) -Compress
-          $hasTestProjects    = ($testProjectMatrix.Count -gt 0).ToString().ToLower()
+          Write-Env "has-any-buildable"  $metadata.hasAnyBuildable.ToString().ToLower()
+          Write-Env "has-any-testable"   $metadata.hasAnyTestable.ToString().ToLower()
+          Write-Env "has-any-deployable" $metadata.hasAnyDeployable.ToString().ToLower()
 
-          Write-Env "test-projects-json"      $testProjectsJson
-          Write-Env "has-test-projects-json"  $hasTestProjects
+          $metadata | ConvertTo-Json -Depth 10  # Write to the host

@@ -8,9 +8,9 @@ on:
         required: true
         type: string
 
-      has-matrix-json:
+      should-run:
         required: true
-        type: string
+        type: boolean
 
       sparse-checkout:
         type: string
@@ -22,7 +22,7 @@ permissions:
 jobs:
   test:
     name: Test ${{ matrix.project.name }}
-    if: ${{ inputs.has-matrix-json == 'true' }}
+    if: ${{ inputs.should-run == true }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

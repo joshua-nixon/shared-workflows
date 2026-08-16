@@ -19,6 +19,10 @@ on:
         required: false
         type: string
 
+    secrets:
+      GITOPS_REPO_TOKEN:
+        required: true
+
 permissions:
   id-token: write
   contents: read
@@ -74,4 +78,5 @@ jobs:
       gitops-repository: ${{ inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environments-json: ${{ needs.setup.outputs.environments-json }}
-    secrets: inherit
+    secrets:
+      GITOPS_REPO_TOKEN: ${{ secrets.GIOPS_REPO_PAT }}

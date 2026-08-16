@@ -20,7 +20,7 @@ on:
 
       deploy-action:
         type: string
-        required: true
+        default: ''
 
     secrets:
       GITOPS_REPO_TOKEN:

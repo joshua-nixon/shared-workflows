@@ -80,18 +80,26 @@ jobs:
         with:
           image-ref: ${{ matrix.project.imageName }}
           scanners: vuln
-          format: table
-          output: trivy-report.txt
+          format: json
+          output: trivy-results.json
           exit-code: '1'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
 
-      - name: Publish Trivy Summary
+      - name: Convert Trivy Results
         if: always() && inputs.enable-trivy
         run: |
-          if [ -s trivy-report.txt ]; then
-            echo "<h2>Trivy Scan Results</h2>" >> $GITHUB_STEP_SUMMARY
-            echo '```text' >> $GITHUB_STEP_SUMMARY
-            cat trivy-report.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+          if [ -s trivy-results.json ]; then
+            trivy convert --format sarif    --output trivy-results.sarif trivy-results.json
+            trivy convert --format template --output trivy-summary.md trivy-results.json    --template '@contrib/github-markdown.tpl'
           fi
+
+      # - name: Publish Trivy Summary
+      #   if: always() && inputs.enable-trivy
+      #   run: |
+      #     if [ -s trivy-report.txt ]; then
+      #       echo "### Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
+      #       echo '```text' >> $GITHUB_STEP_SUMMARY
+      #       cat trivy-report.txt >> $GITHUB_STEP_SUMMARY
+      #       echo '```' >> $GITHUB_STEP_SUMMARY
+      #     fi

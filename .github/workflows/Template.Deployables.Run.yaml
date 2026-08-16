@@ -32,8 +32,12 @@ on:
         type: string
 
       gitops-repository:
-        required: false
+        required: true
         type: string
+
+      deploy-action:
+        type: string
+        default: ''
 
     secrets:
       GITOPS_REPO_TOKEN:
@@ -100,6 +104,7 @@ jobs:
       needs.setup.outputs.has-any-deployable == 'true'
     uses: ./.github/workflows/Template.Deployables.Deploy.yaml
     with:
+      deploy-action: ${{ inputs.deploy-action }}
       gitops-repository: ${{ inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environment-json: ${{ needs.setup.outputs.environment-json }}

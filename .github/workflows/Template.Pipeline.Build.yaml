@@ -4,12 +4,12 @@ on:
   workflow_call:
     inputs:
       matrix-json:
-        required: true
         type: string
+        required: true
 
       should-run:
-        required: true
         type: boolean
+        required: true
 
       sparse-checkout:
         type: string
@@ -20,20 +20,20 @@ on:
         type: string
 
       azure-tenant-id:
-        required: true
         type: string
+        required: true
 
       azure-subscription-id:
-        required: true
         type: string
+        required: true
 
       azure-registry:
-        required: true
         type: string
+        required: true
 
       enable-trivy:
         type: boolean
-        default: false
+        default: true
 
 permissions:
   id-token: write
@@ -42,7 +42,7 @@ permissions:
 jobs:
   build:
     name: Build ${{ matrix.project.name }}
-    if: ${{ inputs.should-run == true }}
+    if: ${{ inputs.should-run }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -78,7 +78,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         if: ${{ inputs.enable-trivy }}
         with:
-          image-ref: ${{ matrix.deployable.imageName }}
+          image-ref: ${{ matrix.project.imageName }}
           scanners: vuln
           format: table
           exit-code: '1'

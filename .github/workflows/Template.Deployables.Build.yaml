@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, eventName, context, dockerfilePath, proposedImage }]'
+        description: '[{ name, eventName, context, dockerfilePath, imageName }]'
         required: true
         type: string
 
@@ -69,4 +69,4 @@ jobs:
           cache-to: type=gha,mode=max
           context: ${{ matrix.project.context }}
           file: ${{ matrix.project.dockerfilePath }}
-          tags: ${{ matrix.project.proposedImage }}
+          tags: ${{ matrix.project.imageName }}

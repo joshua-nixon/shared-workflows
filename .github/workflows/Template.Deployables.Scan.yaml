@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       matrix-json:
-        description: '[{ name, proposedImage }]'
+        description: '[{ name, imageName }]'
         required: true
         type: string
 
@@ -52,7 +52,7 @@ jobs:
       - name: Scan image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ matrix.deployable.proposedImage }}
+          image-ref: ${{ matrix.deployable.imageName }}
           scanners: vuln
           format: table
           exit-code: '1'

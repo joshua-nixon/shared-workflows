@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
 
-      # [{ name, proposedImage }]
+      # [{ name, imageName }]
       matrix-json:
         type: string
         required: true
@@ -42,7 +42,7 @@ jobs:
         id: client-payload
         shell: pwsh
         env:
-          IMAGE: ${{ matrix.deployable.proposedImage }}
+          IMAGE: ${{ matrix.deployable.imageName }}
           ENVIRONMENT: ${{ matrix.environment.name }}
           DEPLOY_ACTION: ${{ inputs.deploy-action }}
         run: |

@@ -164,7 +164,7 @@ function Get-BuildableProjectsMetadata {
             name           = $_.name
             context        = $_.context
             dockerfilePath = $_.dockerfilePath
-            imageName  = $_.imageName
+            imageName      = $_.imageName
             eventName      = $_.eventName
           }
         }

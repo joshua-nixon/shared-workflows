@@ -54,7 +54,7 @@ jobs:
           image-ref: ${{ matrix.project.imageName }}
           scanners: vuln
           format: table
-          output: trivy-results.json
+          output: trivy-table.json
           exit-code: '1'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
@@ -62,7 +62,7 @@ jobs:
       - name: Publish Trivy Results
         if: always()
         run: |
-          if [ -s trivy-summary.md ]; then
+          if [ -s trivy-table.md ]; then
             echo "## Trivy Scan summary" >> $GITHUB_STEP_SUMMARY
             cat trivy-results.md >> $GITHUB_STEP_SUMMARY
             echo "<hr>" >> $GITHUB_STEP_SUMMARY

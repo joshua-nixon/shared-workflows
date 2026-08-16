@@ -161,9 +161,9 @@ function Read-MetadataFile {
 }
 
 $changedFilesJson   = $ChangedFilesJson -replace '\\"', '"' # Normalise the json array
-$values             = Read-MetadataFile 
+$metadata             = Read-MetadataFile 
 $deployables        = @( $DeployablesJson | ConvertFrom-Json )
-$projects           = @( $values.projects | Where-Object { $_.name -in $deployables.name } )
+$projects           = @( $metadata.projects | Where-Object { $_.name -in $deployables.name } )
 $changedFiles       = @( $changedFilesJson | ConvertFrom-Json )
 $shortSha           = $GitHubSHA.Substring(0, 7)
 $timestamp          = Get-Date -Format "yyyyMMdd-HHmmss"

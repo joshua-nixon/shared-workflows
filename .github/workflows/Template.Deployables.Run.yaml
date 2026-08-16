@@ -15,6 +15,10 @@ on:
         type: string
         default: ''
 
+      gitops-repository:
+        required: false
+        type: string
+
 permissions:
   id-token: write
   contents: read
@@ -67,6 +71,7 @@ jobs:
       needs.setup.outputs.has-any-deployable == 'true'
     uses: ./.github/workflows/Template.Deployables.Deploy.yaml
     with:
+      gitops-repository: ${{ inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environments-json: ${{ needs.setup.outputs.environments-json }}
     secrets: inherit

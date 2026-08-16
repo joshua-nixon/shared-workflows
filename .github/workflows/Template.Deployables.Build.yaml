@@ -8,7 +8,7 @@ on:
         required: true
         type: string
 
-      has-matrix-json:
+      should-run:
         required: true
         type: boolean
 
@@ -23,7 +23,7 @@ permissions:
 jobs:
   build:
     name: Build ${{ matrix.project.name }}
-    if: ${{ inputs.has-matrix-json == true }}
+    if: ${{ inputs.should-run == true }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

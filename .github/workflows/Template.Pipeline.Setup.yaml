@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   setup:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     outputs:
       test-projects-json: ${{ steps.metadata.outputs.test-projects-json }}
       has-any-testable: ${{ steps.metadata.outputs.has-any-testable }}

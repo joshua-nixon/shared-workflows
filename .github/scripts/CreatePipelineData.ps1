@@ -22,7 +22,10 @@ param(
 
   # { "name": "String", "deploy": "Boolean" }
   [Parameter(Mandatory)]
-  [string]$EnvironmentsJson
+  [string]$EnvironmentsJson,
+
+  [Parameter(Mandatory)]
+  [string]$DataFile
 )
 
 function Write-KeyValue {
@@ -185,7 +188,7 @@ function Get-TestableProjectsMetadata {
 function Read-MetadataFile {
   # yq flattens nested YAML sequences before the result is parsed as JSON.
   # Allows yaml anchors to work as expected  
-  $valuesJson = yq eval -o=json -c 'explode(.) | (.. | select(tag == "!!seq")) |= flatten' "./.github/project-metadata.yaml"
+  $valuesJson = yq eval -o=json -c 'explode(.) | (.. | select(tag == "!!seq")) |= flatten' $DataFile
 
   return $valuesJson | ConvertFrom-Json
 }

@@ -59,6 +59,7 @@ jobs:
         with:
           repository: nixonjoshua98/shared-workflows
           ref: v1.8
+          path: _shared
           sparse-checkout: |
             .github/scripts/CreatePipelineData.ps1
 
@@ -79,19 +80,21 @@ jobs:
           ENVIRONMENTS_JSON: ${{ inputs.environment-json }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           CHANGED_FILES_JSON: ${{ steps.changed.outputs.all_changed_files || '[]' }}
+          WORKSPACE: ${{ github.workspace }}
         run: |
           function Write-Env($name, $value) {
             "$name=$value" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
 
-          $metadataJson = & .github/scripts/CreatePipelineData.ps1 `
+          $metadataJson = & _shared/.github/scripts/CreatePipelineData.ps1 `
             -BuildableJson      $env:BUILDABLE_JSON `
             -ChangedFilesJson   $env:CHANGED_FILES_JSON `
             -GitHubSHA          $env:GITHUB_SHA_VALUE `
             -GitHubRefName      $env:GITHUB_REF_NAME `
             -ContainerRegistry  $env:AZURE_REGISTRY `
             -GitHubEventName    $env:GITHUB_EVENT_NAME `
-            -EnvironmentsJson   $env:ENVIRONMENTS_JSON
+            -EnvironmentsJson   $env:ENVIRONMENTS_JSON `
+            -DataFile           "$env:WORKSPACE/.github/metadata.yaml"
 
           $metadata = $metadataJson | ConvertFrom-Json
 

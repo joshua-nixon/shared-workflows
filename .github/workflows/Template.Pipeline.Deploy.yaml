@@ -15,10 +15,6 @@ on:
         type: string
         required: true
 
-      deploy-action:
-        type: string
-        default: ''
-
     secrets:
       GITOPS_REPO_TOKEN:
         required: true
@@ -35,25 +31,23 @@ jobs:
         deployable: ${{ fromJSON(inputs.matrix-json) }}
         environment: ${{ fromJSON(inputs.environment-json) }}
     steps:
-      - name: Create client payload
-        id: client-payload
+      - name: Create Payload
+        id: payload
         shell: pwsh
         env:
           IMAGE: ${{ matrix.deployable.imageName }}
           ENVIRONMENT: ${{ matrix.environment.name }}
-          DEPLOY_ACTION: ${{ inputs.deploy-action }}
         run: |
           $payload = @{
             image         = $env:IMAGE
             environment   = $env:ENVIRONMENT
-            deployAction  = $env:DEPLOY_ACTION.ToUpperInvariant()
           } | ConvertTo-Json -Compress
 
-          "client-payload=$payload" >> $env:GITHUB_OUTPUT
+          "payload=$payload" >> $env:GITHUB_OUTPUT
 
       - uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.GITOPS_REPO_TOKEN }}
           repository: ${{ inputs.gitops-repository }}
           event-type: ${{ matrix.deployable.eventName }}
-          client-payload: ${{ steps.client-payload.outputs.client-payload }}
+          client-payload: ${{ steps.payload.outputs.payload }}

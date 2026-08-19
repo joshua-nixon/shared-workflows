@@ -48,27 +48,28 @@ jobs:
       has-any-buildable: ${{ steps.metadata.outputs.has-any-buildable }}
       has-any-deployable: ${{ steps.metadata.outputs.has-any-deployable }}
     steps:
-      - name: Checkout .github
-        uses: actions/checkout@v7
-        with:
-          sparse-checkout: |
-            .github
+      - parallel:
+        - name: Checkout .github
+          uses: actions/checkout@v7
+          with:
+            sparse-checkout: |
+              .github
 
-      - id: extract
-        name: Extract Workflow Ref
-        shell: bash
-        env:
-          WORKFLOW_REF: ${{ job.workflow_ref }}
-        run: |
-          # Strip everything up to '@'
-          REF="${WORKFLOW_REF##*@}"
-          
-          # Strip 'refs/heads/' or 'refs/tags/' by removing everything up to the last slash
-          CLEAN_REF="${REF##*/}"
-          
-          echo "workflow-ref=${CLEAN_REF}" >> "$GITHUB_OUTPUT"
+        - id: extract
+          name: Extract Workflow Ref
+          shell: bash
+          env:
+            WORKFLOW_REF: ${{ job.workflow_ref }}
+          run: |
+            # Strip everything up to '@'
+            REF="${WORKFLOW_REF##*@}"
+            
+            # Strip 'refs/heads/' or 'refs/tags/' by removing everything up to the last slash
+            CLEAN_REF="${REF##*/}"
+            
+            echo "workflow-ref=${CLEAN_REF}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout required resources
+      - name: Checkout Workflow Repository
         uses: actions/checkout@v7
         with:
           repository: ${{ job.workflow_repository }}
@@ -77,13 +78,13 @@ jobs:
           sparse-checkout: |
             .github/scripts/CreatePipelineData.ps1
 
-      - name: Get files changed
+      - name: Get Files Changed
         id: changed
         uses: tj-actions/changed-files@v47
         with:
           json: true
           
-      - name: Create json data
+      - name: Create JSON Data
         id: metadata
         shell: pwsh
         env:
@@ -108,7 +109,7 @@ jobs:
             -ContainerRegistry  $env:AZURE_REGISTRY `
             -GitHubEventName    $env:GITHUB_EVENT_NAME `
             -EnvironmentsJson   $env:ENVIRONMENTS_JSON `
-            -DataFile           "$env:WORKSPACE/.github/metadata.yaml"
+            -MetadataFile      "$env:WORKSPACE/.github/metadata.yaml"
 
           $metadata = $metadataJson | ConvertFrom-Json
 

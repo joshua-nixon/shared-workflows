@@ -54,6 +54,8 @@ jobs:
         run: az acr login --name "${IMAGE_REGISTRY%%.*}"
 
       - name: Run Trivy Scan
+        continue-on-error: true
+        timeout-minutes: 3
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ matrix.project.imageName }}

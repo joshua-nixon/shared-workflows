@@ -60,7 +60,12 @@ jobs:
         env:
           WORKFLOW_REF: ${{ job.workflow_ref }}
         run: |
-          CLEAN_REF=$(echo "${WORKFLOW_REF##*@}" | sed -E 's|^refs/(heads|tags)/||')
+          # Strip everything up to '@'
+          REF="${WORKFLOW_REF##*@}"
+          
+          # Strip 'refs/heads/' or 'refs/tags/' if present
+          CLEAN_REF="${REF#refs/*\}"
+          
           echo "workflow-ref=${CLEAN_REF}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout required resources

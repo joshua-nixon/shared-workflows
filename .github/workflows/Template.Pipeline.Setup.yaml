@@ -63,8 +63,8 @@ jobs:
           # Strip everything up to '@'
           REF="${WORKFLOW_REF##*@}"
           
-          # Strip 'refs/heads/' or 'refs/tags/' if present
-          CLEAN_REF="${REF#refs/*\}"
+          # Strip 'refs/heads/' or 'refs/tags/' by removing everything up to the last slash
+          CLEAN_REF="${REF##*/}"
           
           echo "workflow-ref=${CLEAN_REF}" >> "$GITHUB_OUTPUT"
 

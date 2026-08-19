@@ -54,11 +54,20 @@ jobs:
           sparse-checkout: |
             .github
 
+      - id: extract
+        name: Extract Workflow Ref
+        shell: bash
+        env:
+          WORKFLOW_REF: ${{ job.workflow_ref }}
+        run: |
+          CLEAN_REF=$(echo "${WORKFLOW_REF##*@}" | sed -E 's|^refs/(heads|tags)/||')
+          echo "workflow-ref=${CLEAN_REF}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout required resources
         uses: actions/checkout@v7
         with:
-          repository: nixonjoshua98/shared-workflows
-          ref: v1.8
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ steps.extract.outputs.workflow-ref }}
           path: _shared
           sparse-checkout: |
             .github/scripts/CreatePipelineData.ps1

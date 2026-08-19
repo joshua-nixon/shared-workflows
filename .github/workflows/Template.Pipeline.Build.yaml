@@ -62,7 +62,7 @@ jobs:
       - name: Login to Azure Container Registry
         shell: bash
         env:
-          IMAGE_REGISTRY: ${{ inputs.registry }}
+          IMAGE_REGISTRY: ${{ inputs.azure-registry }}
         run: az acr login --name "${IMAGE_REGISTRY%%.*}"
 
       - name: Build ${{ matrix.project.name }}

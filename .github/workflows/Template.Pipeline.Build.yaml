@@ -9,15 +9,15 @@ on:
 
       should-run:
         type: boolean
-        required: true
+        default: true
 
       sparse-checkout:
         type: string
         default: ''
 
       azure-client-id:
-        required: true
         type: string
+        required: true
 
       azure-tenant-id:
         type: string

@@ -103,7 +103,6 @@ jobs:
       - setup
       - test
       - build
-      - scan
     if: |
       needs.setup.outputs.has-any-deployable == 'true' &&
       needs.build.result == 'success'

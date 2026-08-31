@@ -66,20 +66,20 @@ jobs:
   test:
     needs: 
       - setup
+    if: ${{ needs.setup.outputs.has-any-testable == 'true' }}
     uses: ./.github/workflows/Template.Pipeline.Tests.yaml
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.test-projects-json }}
-      should-run: ${{ needs.setup.outputs.has-any-testable == 'true' }}
 
   build:
     needs:
       - setup
+    if: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
     uses: ./.github/workflows/Template.Pipeline.Build.yaml
     with:
       sparse-checkout: ${{ inputs.sparse-checkout }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
       azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID }}
       azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID }}
       azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
@@ -89,10 +89,10 @@ jobs:
     needs:
       - setup
       - build
+    if: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
     uses: ./.github/workflows/Template.Pipeline.Scan.yaml
     with:
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
-      should-run: ${{ needs.setup.outputs.has-any-buildable == 'true' }}
       azure-client-id: ${{ inputs.azure-client-id || vars.AZURE_CLIENT_ID  }}
       azure-tenant-id: ${{ inputs.azure-tenant-id || vars.AZURE_TENANT_ID  }}
       azure-subscription-id: ${{ inputs.azure-subscription-id || vars.AZURE_SUB_ID }}
@@ -105,11 +105,8 @@ jobs:
       - build
       - scan
     if: |
-      !cancelled() && 
-      !failure() && 
-      !contains(needs.*.result, 'failure') && 
-      !contains(needs.*.result, 'cancelled') &&  
-      needs.setup.outputs.has-any-deployable == 'true'
+      needs.setup.outputs.has-any-deployable == 'true' &&
+      needs.build.result == 'success'
     uses: ./.github/workflows/Template.Pipeline.Deploy.yaml
     with:
       gitops-repository: ${{ inputs.gitops-repository || vars.GH_GITOPS_REPO }}

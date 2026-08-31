@@ -7,9 +7,9 @@ on:
         type: string
         required: true
 
-      should-run:
+      use-cache:
         type: boolean
-        default: true
+        default: false
 
       sparse-checkout:
         type: string
@@ -38,7 +38,6 @@ permissions:
 jobs:
   build:
     name: Build ${{ matrix.project.name }}
-    if: ${{ inputs.should-run }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -65,12 +64,22 @@ jobs:
           IMAGE_REGISTRY: ${{ inputs.azure-registry }}
         run: az acr login --name "${IMAGE_REGISTRY%%.*}"
 
-      - name: Build ${{ matrix.project.name }}
+      - name: Build ${{ matrix.project.name }} with cache
+        if: ${{ inputs.use-cache == true }}
         uses: docker/build-push-action@v7
         with:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          context: ${{ matrix.project.context }}
+          file: ${{ matrix.project.dockerfilePath }}
+          tags: ${{ matrix.project.imageName }}
+
+      - name: Build ${{ matrix.project.name }} without cache
+        if: ${{ inputs.use-cache == false }}
+        uses: docker/build-push-action@v7
+        with:
+          push: true
           context: ${{ matrix.project.context }}
           file: ${{ matrix.project.dockerfilePath }}
           tags: ${{ matrix.project.imageName }}

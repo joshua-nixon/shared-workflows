@@ -7,10 +7,6 @@ on:
         type: string
         required: true
 
-      should-run:
-        type: boolean
-        required: true
-
       sparse-checkout:
         type: string
         default: ''
@@ -21,7 +17,6 @@ permissions:
 jobs:
   test:
     name: Test ${{ matrix.project.name }}
-    if: ${{ inputs.should-run == true }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

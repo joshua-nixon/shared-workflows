@@ -7,10 +7,6 @@ on:
         required: true
         type: string
 
-      should-run:
-        required: true
-        type: boolean
-
       azure-client-id:
         required: true
         type: string
@@ -34,7 +30,6 @@ permissions:
 jobs:
   scan:
     name: Scan ${{ matrix.project.name }}
-    if: inputs.should-run
     runs-on: ubuntu-latest
     strategy:
       matrix:

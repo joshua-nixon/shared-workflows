@@ -9,7 +9,6 @@ name: Template.Pipeline
 #   AZURE_REGISTRY
 #   AZURE_TENANT_ID
 #   AZURE_CLIENT_ID
-#   GH_GITOPS_REPO
 # # # # # # # # # #
 
 on:
@@ -45,7 +44,7 @@ on:
 
       gitops-repository:
         type: string
-        default: ''
+        default: 'joshua-nixon/nixon-gitops'
 
     secrets:
       GITOPS_REPO_TOKEN:
@@ -108,7 +107,7 @@ jobs:
       needs.build.result == 'success'
     uses: ./.github/workflows/Template.Pipeline.Deploy.yaml
     with:
-      gitops-repository: ${{ inputs.gitops-repository || vars.GH_GITOPS_REPO }}
+      gitops-repository: ${{ inputs.gitops-repository }}
       matrix-json: ${{ needs.setup.outputs.buildable-json }}
       environment-json: ${{ needs.setup.outputs.environment-json }}
     secrets:

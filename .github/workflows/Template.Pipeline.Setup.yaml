@@ -83,6 +83,7 @@ jobs:
         uses: tj-actions/changed-files@v47
         with:
           json: true
+          write_output_files: true
           
       - name: Create JSON Data
         id: metadata
@@ -94,16 +95,19 @@ jobs:
           BUILDABLE_JSON: ${{ inputs.buildable-json }}
           ENVIRONMENTS_JSON: ${{ inputs.environment-json }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
-          CHANGED_FILES_JSON: ${{ steps.changed.outputs.all_changed_files || '[]' }}
           WORKSPACE: ${{ github.workspace }}
         run: |
           function Write-Env($name, $value) {
             "$name=$value" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
 
+          # Naive protection against too many changed files
+          $changedFiles     = (Get-Content "$env:CHANGED_FILES_JSON" -Raw | ConvertFrom-Json)[0..500]
+          $changedFilesJson = ConvertTo-Json -InputObject $changedFiles -Compress
+
           $metadataJson = & _shared/.github/scripts/CreatePipelineData.ps1 `
             -BuildableJson      $env:BUILDABLE_JSON `
-            -ChangedFilesJson   $env:CHANGED_FILES_JSON `
+            -ChangedFilesJson   $changedFilesJson `
             -GitHubSHA          $env:GITHUB_SHA_VALUE `
             -GitHubRefName      $env:GITHUB_REF_NAME `
             -ContainerRegistry  $env:AZURE_REGISTRY `
